@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <title>FUN-FUN VR Starter</title>
+
+  <!-- Based on templates/simple-vr-scene from commit 28a426aa6ade789320e2202cfa8d2fe61b46b539. -->
+  <!-- A-Frame includes WebXR support and automatically provides the Enter VR button. -->
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script type="module" src="./main.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #111827;
+    }
+
+    #note {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+      max-width: 360px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: #ffffff;
+      background: rgba(17, 24, 39, 0.82);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div id="note">
+    Open this page in Meta Quest Browser, press Enter VR, then point at the glowing cube and pull either trigger.
+  </div>
+
+  <a-scene
+    renderer="antialias: true; colorManagement: true"
+    vr-mode-ui="enabled: true"
+    webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor, hand-tracking"
+    background="color: #CFE8FF"
+  >
+    <a-entity light="type: ambient; intensity: 0.7"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="3 6 2"></a-entity>
+
+    <a-sky color="#CFE8FF"></a-sky>
+
+    <!-- Player rig adapted directly from the pinned simple-vr-scene template. -->
+    <a-entity id="player-rig" position="0 0 4">
+      <a-camera
+        id="player-camera"
+        position="0 1.6 0"
+        wasd-controls-enabled="false"
+      ></a-camera>
+
+      <!-- Quest Touch controllers with visible laser pointers and trigger clicks. -->
+      <a-entity
+        id="left-controller"
+        laser-controls="hand: left"
+        raycaster="objects: .clickable; far: 12"
+      ></a-entity>
+      <a-entity
+        id="right-controller"
+        laser-controls="hand: right"
+        raycaster="objects: .clickable; far: 12"
+      ></a-entity>
+    </a-entity>
+
+    <a-plane
+      position="0 0 0"
+      rotation="-90 0 0"
+      width="24"
+      height="24"
+      color="#4FAD5B"
+    ></a-plane>
+
+    <a-cylinder
+      position="0 0.45 -3.25"
+      radius="1"
+      height="0.9"
+      color="#334155"
+    ></a-cylinder>
+
+    <a-box
+      id="test-target"
+      class="clickable"
+      position="0 1.55 -3.25"
+      width="0.9"
+      height="0.9"
+      depth="0.9"
+      color="#7C3AED"
+      animation="property: rotation; to: 0 360 0; loop: true; dur: 7000; easing: linear"
+      animation__pulse="property: scale; from: 1 1 1; to: 1.08 1.08 1.08; dir: alternate; loop: true; dur: 900"
+    ></a-box>
+
+    <a-plane position="0 2.95 -3.7" width="5.4" height="1.15" color="#FFFFFF">
+      <a-text
+        value="FUN-FUN VR"
+        position="0 0.18 0.01"
+        color="#111827"
+        width="4.7"
+        align="center"
+      ></a-text>
+      <a-text
+        id="world-status"
+        value="Pull a trigger on the glowing cube"
+        position="0 -0.22 0.01"
+        color="#334155"
+        width="4.3"
+        align="center"
+      ></a-text>
+    </a-plane>
+
+    <a-box position="-2.2 0.5 -5" width="1" height="1" depth="1" color="#F28749"></a-box>
+    <a-sphere position="2.2 0.75 -5" radius="0.75" color="#2563EB"></a-sphere>
+  </a-scene>
+</body>
+</html>
