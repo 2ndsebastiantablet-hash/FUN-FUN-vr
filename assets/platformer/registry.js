@@ -1,8 +1,11 @@
+const MIRROR_BASE = "https://cdn.jsdelivr.net/gh/ArtjomSchwenk/Koy@8742b69b6d965f369e7b8a87cee570a81184c403/Assets/Imports/KayKit_Platformer_Pack_1.0_FREE/Assets/gltf";
+
 export const PLATFORMER_ASSETS = [
   {
     id: "platform-square-blue",
     label: "Platform Square Blue",
-    source: "blue/platform_4x4x1_blue.gltf",
+    source: "Assets/gltf/blue/platform_4x4x1_blue.gltf",
+    url: `${MIRROR_BASE}/blue/platform_4x4x1_blue.gltf`,
     category: "platform",
     role: "standard",
     color: "blue",
@@ -10,25 +13,19 @@ export const PLATFORMER_ASSETS = [
     collisionProfile: "box",
     tags: ["core", "landing", "normal-route"],
     galleryScale: 1,
-    bytes: 50284,
-    sha256: "97e3696956704098c4c57a77aa9965626db1e7b7cd743247b46d34bb0552a115",
-    phase: "phase-1-pilot",
-    status: "converted-pending-gallery-and-headset",
-    runtime: {
-      compression: "gzip",
-      chunkModules: [
-        "./payloads/platform-square-blue-01.js",
-        "./payloads/platform-square-blue-02.js",
-        "./payloads/platform-square-blue-03.js"
-      ],
-      mimeType: "model/gltf-binary"
+    sourceChecksums: {
+      gltf: "01b8767fb100e7ec7b0e597bd6754f110d8e48281a1a76c0e10cc2bf3521b617",
+      bin: "e5fd1e9a14fb5f86f6c1190c23ed372932d098cadcc6d1d00d74b3a12484aaf1",
+      texture: "2771a7c3f7fd59bcba08dc967858942d9f83820ecc9146e98d25707a07210273"
     },
-    fileName: "platform-square-blue.glb"
+    phase: "phase-1-pilot",
+    status: "gallery-ready-pending-headset"
   },
   {
     id: "platform-slope-blue",
     label: "Platform Slope Blue",
-    source: "blue/platform_slope_4x4x4_blue.gltf",
+    source: "Assets/gltf/blue/platform_slope_4x4x4_blue.gltf",
+    url: `${MIRROR_BASE}/blue/platform_slope_4x4x4_blue.gltf`,
     category: "slope",
     role: "ramp",
     color: "blue",
@@ -36,25 +33,19 @@ export const PLATFORMER_ASSETS = [
     collisionProfile: "slope",
     tags: ["ramp", "launch", "transition"],
     galleryScale: 1,
-    bytes: 51976,
-    sha256: "9f749c8ae3c59d76c3b97050a19a856e4cdd4c7d76f1b30b9ce2d03fe7c76d5e",
-    phase: "phase-1-pilot",
-    status: "converted-pending-gallery-and-headset",
-    runtime: {
-      compression: "gzip",
-      chunkModules: [
-        "./payloads/platform-slope-blue-01.js",
-        "./payloads/platform-slope-blue-02.js",
-        "./payloads/platform-slope-blue-03.js"
-      ],
-      mimeType: "model/gltf-binary"
+    sourceChecksums: {
+      gltf: "5b312acb0071bcd2d1c5d55021126240872ec7099dd151dacd8bd22345a64507",
+      bin: "c3a99a943b8c120159e9e0d23b52148ee879ab88dc65b6c6e9474b54f9da29a4",
+      texture: "2771a7c3f7fd59bcba08dc967858942d9f83820ecc9146e98d25707a07210273"
     },
-    fileName: "platform-slope-blue.glb"
+    phase: "phase-1-pilot",
+    status: "gallery-ready-pending-headset"
   },
   {
     id: "spring-pad-green",
     label: "Spring Pad Green",
-    source: "green/spring_pad_green.gltf",
+    source: "Assets/gltf/green/spring_pad_green.gltf",
+    url: `${MIRROR_BASE}/green/spring_pad_green.gltf`,
     category: "mechanic",
     role: "spring-pad",
     color: "green",
@@ -62,26 +53,19 @@ export const PLATFORMER_ASSETS = [
     collisionProfile: "trigger-box",
     tags: ["launch", "spring", "interactive"],
     galleryScale: 1,
-    bytes: 71536,
-    sha256: "fdea3b24df0eb90be29034517bec0a019e6a02b66846825780b00a1c2358db96",
-    phase: "phase-1-pilot",
-    status: "converted-pending-gallery-and-headset",
-    runtime: {
-      compression: "gzip",
-      chunkModules: [
-        "./payloads/spring-pad-green-01.js",
-        "./payloads/spring-pad-green-02.js",
-        "./payloads/spring-pad-green-03.js",
-        "./payloads/spring-pad-green-04.js"
-      ],
-      mimeType: "model/gltf-binary"
+    sourceChecksums: {
+      gltf: "2f9a6b171bffecdbe66488c97969fff42781e4e462c80a22548dc05a2f969a5a",
+      bin: "eeab919eac99f1d23911634ea875d48e21096b53d897abbc102107badbc9a777",
+      texture: "2771a7c3f7fd59bcba08dc967858942d9f83820ecc9146e98d25707a07210273"
     },
-    fileName: "spring-pad-green.glb"
+    phase: "phase-1-pilot",
+    status: "gallery-ready-pending-headset"
   },
   {
     id: "finish-wide",
     label: "Finish Wide",
-    source: "neutral/signage_finish_wide.gltf",
+    source: "Assets/gltf/neutral/signage_finish_wide.gltf",
+    url: `${MIRROR_BASE}/neutral/signage_finish_wide.gltf`,
     category: "goal",
     role: "finish-gate",
     color: "neutral",
@@ -89,23 +73,22 @@ export const PLATFORMER_ASSETS = [
     collisionProfile: "trigger-box",
     tags: ["finish", "goal", "checkpoint"],
     galleryScale: 0.8,
-    bytes: 96240,
-    sha256: "34794b3561c9cb04a60f71a60cc5fd4f50665bbe7a673ae07d7d840b723a2bbc",
-    phase: "phase-1-pilot",
-    status: "converted-pending-gallery-and-headset",
-    runtime: {
-      compression: "gzip",
-      chunkModules: [
-        "./payloads/finish-wide-01.js",
-        "./payloads/finish-wide-02.js",
-        "./payloads/finish-wide-03.js",
-        "./payloads/finish-wide-04.js"
-      ],
-      mimeType: "model/gltf-binary"
+    sourceChecksums: {
+      gltf: "aa088fa3fc24da03f326a017cd11b1978f5b937336b3c0e4ae5527010041ddcf",
+      bin: "6c5beddf3a2929ea750e19752acd1975a0779b7c2e880b1795a537e345b76c6e",
+      texture: "2771a7c3f7fd59bcba08dc967858942d9f83820ecc9146e98d25707a07210273"
     },
-    fileName: "finish-wide.glb"
+    phase: "phase-1-pilot",
+    status: "gallery-ready-pending-headset"
   }
 ];
+
+export const PLATFORMER_ASSET_SOURCE = {
+  uploadedArchive: "KayKit_Platformer_Pack_1.0_FREE.zip",
+  mirrorRepository: "ArtjomSchwenk/Koy",
+  mirrorCommit: "8742b69b6d965f369e7b8a87cee570a81184c403",
+  note: "The uploaded archive remains the source of truth. The pinned public mirror is used only to serve the same glTF files to GitHub Pages."
+};
 
 export function getPlatformerAsset(id) {
   return PLATFORMER_ASSETS.find((asset) => asset.id === id) || null;
