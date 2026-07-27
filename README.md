@@ -1,48 +1,60 @@
 # FUN-FUN VR
 
-A minimal static WebXR scene for Meta Quest Browser using A-Frame and plain JavaScript.
+A minimal static WebXR scene for Meta Quest Browser using A-Frame, plain JavaScript, and Gorilla Tag-style hand locomotion.
 
-## Template source
+## Movement source
 
-This project is adapted from:
+The movement system is based on the exact pinned template requested for this project:
 
 - Repository: `2ndsebastiantablet-hash/feeble`
 - Commit: `28a426aa6ade789320e2202cfa8d2fe61b46b539`
-- Folder: `templates/simple-vr-scene`
+- Folder: `templates/gorilla-tag-locomotion`
 
-The original template's A-Frame scene structure, player rig, camera, lighting, and built-in Enter VR flow were preserved as the foundation.
+The game loads the template's original `gorilla-locomotion.js` directly from that exact commit through a commit-pinned jsDelivr URL. This preserves the source movement logic instead of recreating it.
 
-## Files
+## Preserved movement features
 
-- `index.html` — the complete A-Frame/WebXR scene and one clear playable entry point
-- `main.js` — small scene behavior for VR status and the trigger test cube
+- tracked Quest controllers
+- visible hand spheres
+- hand pushing against the floor and box surfaces
+- one-hand and two-hand launch behavior
+- upward bounce from strong pushes
+- gravity
+- separate air and ground drag
+- floor clamping
+- hand collision and player body collision
+- normal A-Frame Enter VR button
+- no thumbstick locomotion
+- no teleport locomotion
+
+## Project files
+
+- `index.html` — one playable entry point, scene, rig, controllers, colliders, and debug panel
+- `main.js` — small VR session status helper
 - `.nojekyll` — keeps GitHub Pages serving the static files directly
 
 ## Meta Quest test
 
-1. Host the repository over HTTPS.
-2. Open the hosted URL in Meta Quest Browser.
-3. Press **Enter VR**.
-4. Point either Quest controller at the glowing cube.
-5. Pull the trigger.
-6. Confirm the cube turns green and the in-world text reports that trigger input was detected.
+1. Open the GitHub Pages HTTPS URL in Meta Quest Browser.
+2. Press **Enter VR**.
+3. Confirm the pink and blue hand spheres follow the left and right Quest controllers.
+4. Push a hand down and backward against the floor to move forward.
+5. Push harder and release to test bounce and launch behavior.
+6. Push against the colored blocks to move away from them.
 
-## GitHub Pages
+## Hosting
 
-In the repository, open **Settings → Pages** and select:
+GitHub Pages should remain configured as:
 
 - Source: **Deploy from a branch**
 - Branch: **main**
 - Folder: **/(root)**
 
-Save the setting and wait for GitHub to publish the HTTPS site.
-
 ## Technical notes
 
 - A-Frame 1.7.0
-- No npm
-- No framework beyond A-Frame
-- No bundler or build tool
-- Relative local file paths
-- Quest controller laser interaction
 - WebXR local-floor reference space
+- HTTPS required for immersive WebXR
+- no npm
+- no bundler
+- no build step
