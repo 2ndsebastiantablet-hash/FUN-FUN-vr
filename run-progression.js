@@ -50,7 +50,12 @@ function ensureStatsElement() {
 
 function loadBest() {
   try {
-    const stored = Number(localStorage.getItem(storageKey()));
+    const raw = localStorage.getItem(storageKey());
+    if (raw === null) {
+      state.bestFalls = null;
+      return;
+    }
+    const stored = Number(raw);
     state.bestFalls = Number.isFinite(stored) && stored >= 0 ? stored : null;
   } catch {
     state.bestFalls = null;
