@@ -3,6 +3,7 @@
 
 const INITIAL_SPAWN = Object.freeze({ x: 0, y: 0.32, z: 8 });
 const DESKTOP_EYE_HEIGHT = 1.6;
+const DEFAULT_PLAYER_HEIGHT_OFFSET = 0.68;
 
 function formatError(error) {
   if (!error) return "Unknown error";
@@ -147,6 +148,14 @@ window.addEventListener("DOMContentLoaded", function () {
     return rig.components["playtest-safety"];
   }
 
+  function desktopCameraLocalY() {
+    const locomotion = rig.components["gorilla-locomotion"];
+    const offset = locomotion && Number.isFinite(locomotion.data.playerHeightOffset)
+      ? locomotion.data.playerHeightOffset
+      : DEFAULT_PLAYER_HEIGHT_OFFSET;
+    return DESKTOP_EYE_HEIGHT + offset;
+  }
+
   function setNote(message, state) {
     note.textContent = message;
     note.dataset.state = state || "checking";
@@ -246,7 +255,7 @@ window.addEventListener("DOMContentLoaded", function () {
       locomotion.colliders = Array.from(colliders);
     }
 
-    camera.setAttribute("position", `0 ${DESKTOP_EYE_HEIGHT - rig.object3D.position.y} 0`);
+    camera.setAttribute("position", `0 ${desktopCameraLocalY()} 0`);
 
     if (!window.isSecureContext) {
       setNote("Course loaded, but WebXR and multiplayer require HTTPS. Open the GitHub Pages address.", "warning");
@@ -307,7 +316,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
   scene.addEventListener("exit-vr", function () {
     resetPlayer("VR session ended — returned to checkpoint");
-    camera.setAttribute("position", `0 ${DESKTOP_EYE_HEIGHT - rig.object3D.position.y} 0`);
+    camera.setAttribute("position", `0 ${desktopCameraLocalY()} 0`);
     leftConnected = false;
     rightConnected = false;
     setNote("VR exited safely. The multiplayer room remains connected until you leave it.", "ready");
