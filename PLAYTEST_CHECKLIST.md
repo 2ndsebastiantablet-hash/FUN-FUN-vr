@@ -1,128 +1,106 @@
 # FUN-FUN VR — Quest Playtest Checklist
 
-Use this order so model-loading, movement, platforming, safety, and multiplayer problems are easier to isolate.
+Use this order so loading, movement, generation, safety, and multiplayer problems are easy to isolate.
 
-## 1. Page and course loading
+## 1. Calibration page
 
-- Open the GitHub Pages URL in Meta Quest Browser.
-- Confirm the page reports **Preflight passed** rather than a red setup error.
-- Confirm the course panel eventually reports that all KayKit models loaded.
-- Confirm the normal **Enter VR** button appears.
-- Verify the map contains blue platforms, a blue ramp, a green spring pad, and a finish gate.
-- If a model fails, confirm a colored wireframe fallback appears instead of an invisible platform.
+- Open the main GitHub Pages URL.
+- Confirm **Calibration** is selected.
+- Confirm the handcrafted ramp and spring course still appears.
+- Confirm the page reports **Preflight passed** rather than a red error.
+- Enter VR and verify both controller spheres track normally.
+- Confirm the calibration course still supports platform pushes, the ramp, spring, checkpoints, finish, and restart.
 
-## 2. VR entry and controller tracking
+## 2. Generated page and seed controls
 
-- Enter VR and verify the scene appears without a black screen or loading loop.
-- Hold both controllers still for one second.
-- Confirm the pink sphere follows the left controller.
-- Confirm the blue sphere follows the right controller.
-- Confirm entering VR does not place the player below the course or cause an immediate launch.
-- Confirm the player starts on the first blue platform.
+- Exit VR before changing modes.
+- Select **Generated** and press **Load Course**.
+- Confirm the browser opens `generated.html` with `mode=generated` and a seed in the URL.
+- Confirm the in-world sign shows the seed and an eight-character map checksum.
+- Press **Copy Course Link** and paste the result somewhere to confirm it includes the same seed.
+- Press **New Seed**, then **Load Course**, and confirm the layout changes.
+- Reopen the original copied link and confirm the original layout and checksum return.
 
-## 3. Standard platform pushing
+## 3. Generated course structure
 
-- Push one hand down and backward against the first platform.
-- Confirm the player moves in the opposite direction of the hand push.
-- Repeat with the other hand.
-- Repeat with both hands.
-- Confirm two-hand launches are stronger than one-hand launches.
-- Confirm the platform top behaves like a floor rather than a wall.
-- Confirm the hands stop at the platform surface instead of passing deeply through it.
+- Confirm the route contains ordinary blue platforms, two green checkpoint rings, a green spring pad, and a finish gate.
+- Confirm all KayKit models load or a visible wireframe fallback appears.
+- Confirm the map contains no overlapping platforms, backwards sections, impossible sideways jumps, or hidden platforms.
+- Confirm the route always moves generally forward from the start toward the finish.
 
-## 4. Gaps, gravity, and landing
+## 4. Generated locomotion
 
-- Cross from the start platform to the second platform.
-- Confirm the first gap is reachable without an extreme launch.
-- Intentionally jump short and confirm gravity pulls the player into the void.
-- Confirm the game returns the player to the latest checkpoint rather than leaving them lost.
-- Land near a platform edge and confirm the body does not fall through the top.
-- Approach the side of a platform and confirm the body does not pass straight through it.
+- Push from the starting platform with one hand and then two hands.
+- Confirm platform tops behave as floors.
+- Test every side-step and raised platform.
+- Confirm hands do not snag at the seam between each platform’s two collision boxes.
+- Intentionally miss several jumps and confirm gravity and checkpoint recovery work.
+- Land near edges and confirm the body does not pass through the platform.
 
-## 5. Stepped slope
+## 5. Checkpoints and spring
 
-- Reach the large blue ramp.
-- Push upward along the visible ramp.
-- Confirm the ten hidden collision steps feel reasonably continuous.
-- Look for sudden sideways pushes, hand snagging, shaking, or the body becoming stuck between steps.
-- Confirm the player can reach the high platform at the top.
-- Confirm the first green checkpoint marker activates there.
+- Reach checkpoint 1 and confirm the status changes.
+- Fall immediately afterward and confirm you return to checkpoint 1.
+- Step onto the spring and confirm it launches forward and upward only once.
+- Land on the spring checkpoint and confirm checkpoint 2 activates.
+- Fall again and confirm you return to checkpoint 2.
 
-## 6. Spring pad
+## 6. Finish, timing, and restart
 
-- Reach the green spring pad.
-- Step or land on the center of the pad.
-- Confirm it launches the player upward and toward the next high platform.
-- Confirm the spring does not repeatedly fire every frame.
-- Confirm missing the landing returns the player to the first checkpoint.
-- Land on the high platform and confirm the second checkpoint activates.
-- Fall afterward and confirm the player returns to the second checkpoint.
+- Pass through the finish gate.
+- Confirm the correct seed and finish time are reported.
+- Restart outside VR and confirm the timer and checkpoints reset while the map stays the same.
+- Complete the same seed twice and confirm its faster local best time is retained.
+- Load another seed and confirm it has a separate best time.
 
-## 7. Final platforms and finish
+## 7. Seed stress test
 
-- Cross the two high platforms and the descending platform.
-- Confirm the height drop does not force the player through the lower platform.
-- Pass through the scaled finish gate.
-- Confirm the course reports completion and a finish time.
-- Restart the course outside VR and confirm:
-  - the timer clears,
-  - checkpoint progress returns to zero,
-  - the finish trigger can activate again,
-  - the player returns to the first platform.
-- Complete a second run and confirm the browser keeps the faster local best time.
+Test at least five seeds:
 
-## 8. Comfort and safety
+- `FUNFUN01`
+- `LEFTTEST`
+- `RIGHTTEST`
+- `HEIGHT01`
+- one random seed generated by the page
 
-- Move aggressively sideways and upward.
-- Confirm leaving the course bounds causes a checkpoint reset.
-- Confirm falling below the map resets before the player remains in the void.
-- Exit VR and enter again.
-- Confirm the player returns to the latest checkpoint and movement still works.
-- Confirm no large debug panel follows the camera.
-- Confirm the start sign is readable without blocking the route.
+For each seed, record whether every jump is reachable, the spring is reliable, and the checksum remains stable after reopening the link.
 
-## 9. Solo multiplayer diagnostic
+## 8. Solo multiplayer diagnostic
 
-- Stay outside VR and make sure you are not connected to a room.
+- Stay outside VR and disconnect from any room.
 - Press **Run Solo Network Test**.
-- Confirm a temporary test avatar appears briefly.
-- Confirm PeerJS signaling, a real WebRTC data-channel exchange, and avatar rendering pass.
-- Run the test a second time and confirm no duplicate test avatar remains.
-- Turn Wi-Fi off, run once, and confirm a readable timeout or connection error appears instead of endless loading.
-- Turn Wi-Fi back on.
-- Confirm a failed multiplayer test does not prevent solo platforming.
+- Confirm signaling, WebRTC data exchange, and avatar rendering pass.
+- Run it twice and confirm no duplicate test avatar remains.
+- Confirm a failed network test does not prevent solo calibration or generated play.
 
-## 10. Multiplayer room setup — when another tester is available
+## 9. Multiplayer generated map — when another tester is available
 
-- Keep both Quest browsers outside VR while setting up the room.
-- On Quest A, enter a name and press **Create Room**.
-- Confirm a six-character room code appears.
-- On Quest B, enter a different name and the room code, then press **Join**.
-- Confirm both devices report `2 / 4 players`.
+- On device A, load a generated seed and copy the exact course link.
+- Open that exact link on device B before creating or joining a room.
+- Confirm both devices show the same seed and map checksum.
+- Create and join the multiplayer room.
 - Enter VR on both devices.
-- Confirm both players see the same deterministic platform layout.
-- Confirm remote avatars stay aligned with the platforms as players climb and launch.
-- Confirm checkpoint and finish messages are currently local to each player; shared course-state synchronization is not implemented yet.
+- Confirm remote avatars align with the same platforms throughout the route.
+- Remember that checkpoints, spring events, timers, completion, and restart are still local in this phase.
 
-## 11. Multiplayer disconnect and recovery — when another tester is available
+## 10. Disconnect and recovery — when another tester is available
 
-- Briefly interrupt one guest’s Wi-Fi and confirm the other room members do not all disconnect immediately.
-- Restore Wi-Fi and note whether the guest must leave and rejoin.
-- Have one guest leave normally and confirm their avatar disappears.
-- Have the guest rejoin and confirm the avatar returns once without duplicates.
-- Have the host leave and confirm guests receive a room-closed message.
-- Create a new room afterward without refreshing.
-- Test once on the same Wi-Fi and once on different networks when practical.
+- Interrupt one guest’s Wi-Fi briefly and confirm the other player is not immediately removed from their own course.
+- Restore Wi-Fi and rejoin if required.
+- Confirm an avatar disappears once when a guest leaves and appears once when they rejoin.
+- Have the host leave and confirm guests receive the room-closed message.
 
 ## Report these details with any bug
 
 - Quest model and Meta Quest Browser version.
-- Exact platform or mechanic involved.
+- Course mode.
+- Exact seed and map checksum.
+- Module or platform where the problem occurred.
 - Current checkpoint number.
-- Whether the player was pushing with one hand or two.
+- One-hand or two-hand push.
 - Whether the player was rising, falling, or standing.
-- Whether the KayKit model or a wireframe fallback was visible.
-- Whether multiplayer was active and whether the device was host or guest.
-- Exact status or error message.
-- Whether the problem happens every time or intermittently.
+- Model or wireframe fallback visible.
+- Multiplayer host or guest status.
+- Exact status/error message.
+- Whether the bug repeats on the same seed.
 - Screenshot or Quest recording when possible.
