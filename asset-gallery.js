@@ -45,18 +45,19 @@ async function addPedestal(asset, index, counters) {
   const assetUrl = await getPlatformerAssetUrl(asset.id);
   if (!assetUrl) {
     counters.failed += 1;
-    setStatus(`Asset payload missing: ${asset.id}.`, "error");
+    setStatus(`Asset source missing: ${asset.id}.`, "error");
     return;
   }
+
   model.setAttribute("gltf-model", `url(${assetUrl})`);
   model.setAttribute("position", `0 ${0.27 - modelBottom} 0`);
   model.setAttribute("scale", `${asset.galleryScale} ${asset.galleryScale} ${asset.galleryScale}`);
-  if (asset.category === "collectible") {
-    model.setAttribute("animation", "property: rotation; to: 0 360 0; loop: true; dur: 6000; easing: linear");
-  }
   model.addEventListener("model-loaded", () => {
     counters.loaded += 1;
-    setStatus(`KayKit gallery: ${counters.loaded}/${PLATFORMER_ASSETS.length} assets loaded. Use WASD + mouse on desktop or Enter VR for scale inspection.`, counters.loaded === PLATFORMER_ASSETS.length ? "ready" : "checking");
+    setStatus(
+      `KayKit pilot: ${counters.loaded}/${PLATFORMER_ASSETS.length} assets loaded. Use WASD + mouse on desktop or Enter VR for scale inspection.`,
+      counters.loaded === PLATFORMER_ASSETS.length ? "ready" : "checking"
+    );
   });
   model.addEventListener("model-error", () => {
     counters.failed += 1;
@@ -97,7 +98,7 @@ function startGallery() {
   Promise.all(PLATFORMER_ASSETS.map((asset, index) => addPedestal(asset, index, counters))).catch((error) => {
     setStatus(`Asset gallery setup failed: ${error.message || error}`, "error");
   });
-  setStatus(`Loading ${PLATFORMER_ASSETS.length} converted KayKit GLB assets…`);
+  setStatus(`Loading ${PLATFORMER_ASSETS.length} KayKit glTF pilot assets…`);
 
   sceneEl.addEventListener("enter-vr", () => document.body.classList.add("vr-active"));
   sceneEl.addEventListener("exit-vr", () => document.body.classList.remove("vr-active"));
