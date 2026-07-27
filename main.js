@@ -5,17 +5,12 @@ const SPAWN = { x: 0, y: -0.68, z: 4 };
 const DESKTOP_EYE_HEIGHT = 1.6;
 
 function formatError(error) {
-  if (!error) {
-    return "Unknown error";
-  }
-
+  if (!error) return "Unknown error";
   return error.message || String(error);
 }
 
 function registerPlaytestSafety() {
-  if (!window.AFRAME || AFRAME.components["playtest-safety"]) {
-    return;
-  }
+  if (!window.AFRAME || AFRAME.components["playtest-safety"]) return;
 
   AFRAME.registerComponent("playtest-safety", {
     schema: {
@@ -38,34 +33,22 @@ function registerPlaytestSafety() {
     },
 
     tick: function (time) {
-      if (time - this.lastCheck < 250) {
-        return;
-      }
-
+      if (time - this.lastCheck < 250) return;
       this.lastCheck = time;
       const position = this.el.object3D.position;
       const invalid = !Number.isFinite(position.x) || !Number.isFinite(position.y) || !Number.isFinite(position.z);
       const tooFar = Math.hypot(position.x, position.z - SPAWN.z) > this.data.maxDistance;
       const unsafeHeight = position.y > this.data.maxHeight || position.y < this.data.minHeight;
-
-      if (invalid || tooFar || unsafeHeight) {
-        this.resetPlayer("Safety reset: player left the test area");
-      }
+      if (invalid || tooFar || unsafeHeight) this.resetPlayer("Safety reset: player left the test area");
     },
 
     onVisibilityChange: function () {
-      if (!document.hidden) {
-        this.resetMotionOnly();
-      }
+      if (!document.hidden) this.resetMotionOnly();
     },
 
     resetMotionOnly: function () {
       const locomotion = this.el.components["gorilla-locomotion"];
-
-      if (!locomotion) {
-        return;
-      }
-
+      if (!locomotion) return;
       locomotion.velocity.set(0, 0, 0);
       locomotion.launchVelocity.set(0, 0, 0);
       locomotion.pushHistory = [];
@@ -73,21 +56,14 @@ function registerPlaytestSafety() {
     },
 
     resetPlayer: function (message) {
-      const now = performance.now();
-
-      if (now - this.lastReset < 500) {
-        return;
-      }
-
-      this.lastReset = now;
+      const currentTime = performance.now();
+      if (currentTime - this.lastReset < 500) return;
+      this.lastReset = currentTime;
       this.el.object3D.position.copy(this.spawn);
 
       const locomotion = this.el.components["gorilla-locomotion"];
-      if (locomotion && typeof locomotion.resetTracking === "function") {
-        locomotion.resetTracking();
-      }
-
-      window.dispatchEvent(new CustomEvent("playtest-reset", { detail: { message: message } }));
+      if (locomotion && typeof locomotion.resetTracking === "function") locomotion.resetTracking();
+      window.dispatchEvent(new CustomEvent("playtest-reset", { detail: { message } }));
     }
   });
 }
@@ -105,15 +81,13 @@ window.addEventListener("DOMContentLoaded", function () {
     }
     return;
   }
+
   const rig = document.getElementById("player-rig");
   const camera = document.getElementById("player-camera");
   const leftHand = document.getElementById("left-hand");
   const rightHand = document.getElementById("right-hand");
   const worldStatus = document.getElementById("world-status");
-
-  if (!scene || !note || !rig || !camera || !leftHand || !rightHand || !worldStatus) {
-    return;
-  }
+  if (!scene || !note || !rig || !camera || !leftHand || !rightHand || !worldStatus) return;
 
   let leftConnected = false;
   let rightConnected = false;
@@ -129,17 +103,10 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateControllerStatus() {
-    if (fatalError) {
-      return;
-    }
-
-    if (leftConnected && rightConnected) {
-      setWorldStatus("Both controllers tracked - push the floor to move");
-    } else if (leftConnected || rightConnected) {
-      setWorldStatus("Waiting for the other controller");
-    } else if (scene.is("vr-mode")) {
-      setWorldStatus("Waiting for Quest controllers");
-    }
+    if (fatalError) return;
+    if (leftConnected && rightConnected) setWorldStatus("Both controllers tracked - push the floor to move");
+    else if (leftConnected || rightConnected) setWorldStatus("Waiting for the other controller");
+    else if (scene.is("vr-mode")) setWorldStatus("Waiting for Quest controllers");
   }
 
   function showFatal(message) {
@@ -150,13 +117,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
   function resetPlayer(message) {
     const safety = rig.components["playtest-safety"];
-
-    if (safety && typeof safety.resetPlayer === "function") {
-      safety.resetPlayer(message);
-      return;
-    }
-
-    rig.object3D.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+    if (safety && typeof safety.resetPlayer === "function") safety.resetPlayer(message);
+    else rig.object3D.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
   }
 
   leftHand.addEventListener("controllerconnected", function () {
@@ -179,22 +141,10 @@ window.addEventListener("DOMContentLoaded", function () {
   async function runPreflight() {
     const problems = [];
     const colliders = scene.querySelectorAll("[locomotion-collider]");
-
-    if (window.__LOCOMOTION_LOAD_FAILED__ || !AFRAME.components["gorilla-locomotion"]) {
-      problems.push("the pinned locomotion script did not load");
-    }
-
-    if (!AFRAME.components["locomotion-collider"]) {
-      problems.push("the locomotion collider component is missing");
-    }
-
-    if (!rig.components["gorilla-locomotion"]) {
-      problems.push("the player rig did not initialize the locomotion component");
-    }
-
-    if (colliders.length < 5) {
-      problems.push("the test area is missing collision surfaces");
-    }
+    if (window.__LOCOMOTION_LOAD_FAILED__ || !AFRAME.components["gorilla-locomotion"]) problems.push("the pinned locomotion script did not load");
+    if (!AFRAME.components["locomotion-collider"]) problems.push("the locomotion collider component is missing");
+    if (!rig.components["gorilla-locomotion"]) problems.push("the player rig did not initialize the locomotion component");
+    if (colliders.length < 5) problems.push("the test area is missing collision surfaces");
 
     if (problems.length) {
       showFatal("Preflight failed: " + problems.join("; ") + ". Refresh the page while connected to the internet.");
@@ -202,12 +152,10 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 
     rig.setAttribute("playtest-safety", "maxDistance: 16; maxHeight: 12; minHeight: -1.2");
-
-    // The template lowers the rig so the virtual floor is reachable. Compensate only for desktop preview.
     camera.setAttribute("position", `0 ${DESKTOP_EYE_HEIGHT - rig.object3D.position.y} 0`);
 
     if (!window.isSecureContext) {
-      setNote("Scene loaded, but WebXR requires HTTPS. Open the GitHub Pages address instead.", "warning");
+      setNote("Scene loaded, but WebXR and multiplayer require HTTPS. Open the GitHub Pages address instead.", "warning");
       setWorldStatus("HTTPS is required for Enter VR");
       return;
     }
@@ -220,9 +168,8 @@ window.addEventListener("DOMContentLoaded", function () {
 
     try {
       const vrSupported = await navigator.xr.isSessionSupported("immersive-vr");
-
       if (vrSupported) {
-        setNote("Preflight passed. Press Enter VR, wait for both hand spheres, then push against the floor or blocks.", "ready");
+        setNote("Preflight passed. Create or join a room before Enter VR, then wait for both hand spheres.", "ready");
         setWorldStatus("VR ready - press Enter VR");
       } else {
         setNote("Scene checks passed, but this browser reports no immersive VR support. Open it in Meta Quest Browser.", "warning");
@@ -234,22 +181,16 @@ window.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  if (scene.hasLoaded) {
-    runPreflight();
-  } else {
-    scene.addEventListener("loaded", runPreflight, { once: true });
-  }
+  if (scene.hasLoaded) runPreflight();
+  else scene.addEventListener("loaded", runPreflight, { once: true });
 
   scene.addEventListener("enter-vr", function () {
-    // In immersive VR, the headset supplies camera height and rotation.
     camera.setAttribute("position", "0 0 0");
     leftConnected = false;
     rightConnected = false;
-    setNote("VR session active. Wait for both hand spheres, then push the floor or blocks. Thumbsticks and teleport are disabled.", "ready");
+    setNote("VR active. Wait for both hands, then push the floor or blocks. Connected multiplayer avatars appear automatically.", "ready");
     setWorldStatus("Waiting for Quest controllers");
 
-    // Disable push force briefly while Quest controller poses settle. This avoids
-    // a stale fallback pose being interpreted as a giant first-frame hand push.
     const locomotion = rig.components["gorilla-locomotion"];
     if (locomotion) {
       const normalPushMultiplier = locomotion.data.handPushMultiplier;
@@ -258,7 +199,6 @@ window.addEventListener("DOMContentLoaded", function () {
       locomotion.launchVelocity.set(0, 0, 0);
       locomotion.pushHistory = [];
       locomotion.hasPreviousHands = false;
-
       window.setTimeout(function () {
         locomotion.data.handPushMultiplier = normalPushMultiplier;
         locomotion.velocity.set(0, 0, 0);
@@ -274,19 +214,53 @@ window.addEventListener("DOMContentLoaded", function () {
     camera.setAttribute("position", `0 ${DESKTOP_EYE_HEIGHT - rig.object3D.position.y} 0`);
     leftConnected = false;
     rightConnected = false;
-    setNote("VR exited safely. Press Enter VR to test again.", "ready");
+    setNote("VR exited safely. The multiplayer room remains connected until you leave it.", "ready");
     setWorldStatus("VR ready - press Enter VR");
   });
 
   window.addEventListener("playtest-reset", function (event) {
-    setWorldStatus(event.detail && event.detail.message ? event.detail.message : "Player reset to spawn");
+    setWorldStatus(event.detail?.message || "Player reset to spawn");
   });
 
+  function reportMultiplayerError(message) {
+    const multiplayerStatus = document.getElementById("multiplayer-status");
+    if (multiplayerStatus) {
+      multiplayerStatus.textContent = message;
+      multiplayerStatus.dataset.state = "error";
+    }
+  }
+
   window.addEventListener("error", function (event) {
-    showFatal("Runtime error: " + formatError(event.error || event.message));
+    const source = String(event.filename || "");
+    const message = formatError(event.error || event.message);
+    const multiplayerRelated = /peerjs|multiplayer/i.test(source + " " + message);
+
+    if (multiplayerRelated) {
+      reportMultiplayerError("Multiplayer error: " + message + ". Single-player VR is still available.");
+      return;
+    }
+
+    showFatal("Runtime error: " + message);
   });
 
   window.addEventListener("unhandledrejection", function (event) {
-    showFatal("Runtime error: " + formatError(event.reason));
+    const message = formatError(event.reason);
+    const multiplayerRelated = /peer|webrtc|ice|network|multiplayer|data channel/i.test(message);
+
+    if (multiplayerRelated) {
+      reportMultiplayerError("Multiplayer error: " + message + ". Single-player VR is still available.");
+      return;
+    }
+
+    showFatal("Runtime error: " + message);
   });
+});
+
+// Multiplayer hardening is separate so the original room implementation stays easy to audit.
+import("./multiplayer-hardening.js").catch(function (error) {
+  const status = document.getElementById("multiplayer-status");
+  if (status) {
+    status.textContent = "Multiplayer safety checks failed to load: " + formatError(error);
+    status.dataset.state = "error";
+  }
 });
