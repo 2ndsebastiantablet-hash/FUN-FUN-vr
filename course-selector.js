@@ -10,6 +10,12 @@ function start() {
     return;
   }
 
+  // A direct generated.html visit receives the stable default seed in its URL.
+  if (onGeneratedPage && request.mode !== "generated") {
+    location.replace(createCourseUrl({ mode: "generated", seed: request.seed }));
+    return;
+  }
+
   setupCourseModeControls();
 }
 
