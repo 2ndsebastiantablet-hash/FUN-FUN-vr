@@ -1,17 +1,4 @@
-const PAYLOAD_MODULES = {
-  "platform-square-blue": "./payloads/platform-square-blue.js",
-  "platform-small-green": "./payloads/platform-small-green.js",
-  "platform-long-yellow": "./payloads/platform-long-yellow.js",
-  "platform-slope-blue": "./payloads/platform-slope-blue.js",
-  "platform-hole-red": "./payloads/platform-hole-red.js",
-  "spring-pad-green": "./payloads/spring-pad-green.js",
-  "hoop-blue": "./payloads/hoop-blue.js",
-  "arch-tall-blue": "./payloads/arch-tall-blue.js",
-  "pipe-straight-red": "./payloads/pipe-straight-red.js",
-  "barrier-red": "./payloads/barrier-red.js",
-  "floor-wood-long": "./payloads/floor-wood-long.js",
-  "finish-wide": "./payloads/finish-wide.js"
-};
+import { getPlatformerAsset } from "./registry.js";
 
 const urlCache = new Map();
 
@@ -24,14 +11,34 @@ function decodeBase64(base64) {
   return bytes;
 }
 
+async function gunzip(bytes) {
+  if (typeof DecompressionStream !== "function") {
+    throw new Error("This browser does not support DecompressionStream, which is required for the Phase 1 asset pilot.");
+  }
+
+  const stream = new Blob([bytes])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
 export async function getPlatformerAssetUrl(id) {
   if (urlCache.has(id)) return urlCache.get(id);
-  const modulePath = PAYLOAD_MODULES[id];
-  if (!modulePath) return null;
 
-  const payloadModule = await import(modulePath);
+  const asset = getPlatformerAsset(id);
+  if (!asset) return null;
+
+  const chunks = await Promise.all(
+    asset.runtime.chunkModules.map(async (path) => (await import(path)).default)
+  );
+  const glbBytes = await gunzip(decodeBase64(chunks.join("")));
+  const magic = String.fromCharCode(...glbBytes.slice(0, 4));
+  if (magic !== "glTF") {
+    throw new Error(`Invalid GLB payload for ${id}`);
+  }
+
   const url = URL.createObjectURL(
-    new Blob([decodeBase64(payloadModule.default)], { type: "model/gltf-binary" })
+    new Blob([glbBytes], { type: asset.runtime.mimeType })
   );
   urlCache.set(id, url);
   return url;
