@@ -1,6 +1,6 @@
 # FUN-FUN VR
 
-A static WebXR game for Meta Quest Browser using A-Frame, plain JavaScript, Gorilla Tag-style hand locomotion, and WebRTC peer-to-peer multiplayer.
+A static WebXR game for Meta Quest Browser using A-Frame, plain JavaScript, Gorilla Tag-style hand locomotion, WebRTC peer-to-peer multiplayer, and a phased KayKit platforming conversion.
 
 ## Movement source
 
@@ -11,6 +11,27 @@ The movement system is based on the exact pinned template requested for this pro
 - Folder: `templates/gorilla-tag-locomotion`
 
 The game loads the template's original `gorilla-locomotion.js` from a commit-pinned jsDelivr URL. The scene wiring and playtest safety code adapt that source without replacing its hand push, bounce, launch, gravity, drag, controller tracking, or collision behavior.
+
+## KayKit platforming conversion — Phase 1 pilot
+
+The uploaded `KayKit_Platformer_Pack_1.0_FREE.zip` has been audited and registered as the source of truth for the future platforming map.
+
+The first pilot prepares four representative pieces without replacing the current movement-test map:
+
+- standard blue landing platform
+- large blue slope/ramp
+- green spring pad
+- wide finish gate
+
+Open the hosted asset gallery at:
+
+`https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/asset-gallery.html`
+
+The gallery supports desktop inspection and the standard A-Frame **Enter VR** button. It displays each pilot model on a labeled pedestal with its category, planned collision profile, and measured dimensions.
+
+The asset registry records source paths, roles, bounds, tags, and SHA-256 hashes from the uploaded archive. The pilot models are delivered from an HTTPS GitHub mirror pinned to an immutable commit; the uploaded ZIP remains authoritative. See `PHASE_1_ASSET_AUDIT.md` for the complete audit and exit criteria.
+
+Phase 1 intentionally does not add final collisions, spring behavior, checkpoints, finish logic, procedural generation, or replace the live map. Those systems begin after the four pilot pieces pass visual and scale inspection.
 
 ## Peer-to-peer multiplayer
 
@@ -88,6 +109,12 @@ The VR build includes:
 - `main.js` — VR preflight, controller status, lifecycle handling, safety reset, and multiplayer error isolation
 - `multiplayer.js` — PeerJS room flow, connection mesh, pose sync, remote avatars, and disconnect handling
 - `multiplayer-hardening.js` — validation, connection timeouts, heartbeat checks, recoverable-error handling, and solo diagnostics
+- `asset-gallery.html` — separate desktop/VR inspection scene for Phase 1 platforming assets
+- `asset-gallery.js` — gallery construction and model-load reporting
+- `assets/platformer/registry.js` — asset IDs, source paths, URLs, bounds, checksums, tags, and planned collision profiles
+- `assets/platformer/bundle.js` — small asset URL resolver used by the gallery and future map code
+- `assets/platformer/KAYKIT_LICENSE.txt` — preserved KayKit license notice
+- `PHASE_1_ASSET_AUDIT.md` — archive inventory, pilot decisions, hosting method, and Phase 1 exit criteria
 - `PLAYTEST_CHECKLIST.md` — recommended solo, movement, and later multi-headset test order
 - `.nojekyll` — keeps GitHub Pages serving the static files directly
 
