@@ -18,6 +18,8 @@
   ></script>
   <script src="./multiplayer.js" defer></script>
   <script type="module" src="./course-selector.js"></script>
+  <script type="module" src="./comfort-fixes.js"></script>
+  <script type="module" src="./run-progression.js"></script>
   <script type="module" src="./generated-course.js"></script>
   <script type="module" src="./main.js"></script>
 
@@ -126,7 +128,7 @@
     <a-entity light="type: directional; intensity: 0.9" position="6 12 8"></a-entity>
     <a-sky color="#BAE6FD"></a-sky>
 
-    <a-entity id="player-rig" position="0 0.32 8" gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; floorHeight: -20; playerHeightOffset: 0.68">
+    <a-entity id="player-rig" position="0 0.02 8" gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; floorHeight: -20; playerHeightOffset: 0.98; bodyRadius: 0.32; bodyHeight: 1.30">
       <a-camera id="player-camera" position="0 1.6 0" wasd-controls-enabled="false"></a-camera>
       <a-entity id="left-hand" position="-0.35 -0.35 -0.4" tracked-controls="hand: left"><a-sphere id="left-hand-visual" radius="0.12" color="#FF7AA2" opacity="0.95"></a-sphere></a-entity>
       <a-entity id="right-hand" position="0.35 -0.35 -0.4" tracked-controls="hand: right"><a-sphere id="right-hand-visual" radius="0.12" color="#6FC3FF" opacity="0.95"></a-sphere></a-entity>
