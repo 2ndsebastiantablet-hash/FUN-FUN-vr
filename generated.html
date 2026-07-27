@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>FUN-FUN VR Generated Course</title>
+
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/2ndsebastiantablet-hash/feeble@28a426aa6ade789320e2202cfa8d2fe61b46b539/templates/gorilla-tag-locomotion/gorilla-locomotion.js"
+    onerror="window.__LOCOMOTION_LOAD_FAILED__ = true;"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"
+    onerror="window.__PEERJS_LOAD_FAILED__ = true;"
+  ></script>
+  <script src="./multiplayer.js" defer></script>
+  <script type="module" src="./course-selector.js"></script>
+  <script type="module" src="./generated-course.js"></script>
+  <script type="module" src="./main.js"></script>
+
+  <style>
+    html, body { width: 100%; height: 100%; }
+    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #0f172a; }
+    #note, #multiplayer-ui, #course-ui {
+      position: fixed; z-index: 20; padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.18); border-radius: 10px;
+      color: #fff; background: rgba(15,23,42,.92); font-size: 14px;
+      line-height: 1.45; box-sizing: border-box;
+    }
+    #note { top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); max-width: min(430px, calc(100vw - 48px)); pointer-events: none; }
+    #note[data-state="ready"] { border-color: rgba(74,222,128,.72); }
+    #note[data-state="warning"] { border-color: rgba(250,204,21,.85); }
+    #note[data-state="error"] { border-color: rgba(248,113,113,.9); background: rgba(69,10,10,.94); }
+    #multiplayer-ui { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); width: min(390px, calc(100vw - 24px)); }
+    #course-ui { left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); width: min(430px, calc(100vw - 24px)); }
+    #multiplayer-ui h2, #course-ui h2 { margin: 0 0 4px; font-size: 17px; }
+    #multiplayer-ui p, #course-ui p { margin: 4px 0 8px; color: #cbd5e1; font-size: 12px; }
+    .multiplayer-row, .course-row { display: flex; gap: 7px; margin-top: 7px; align-items: center; }
+    .course-row { flex-wrap: wrap; }
+    .course-hint { margin-top: 7px; color: #94a3b8; font-size: 11px; }
+    #multiplayer-ui input, #multiplayer-ui button, #course-ui input, #course-ui select, #course-ui button, #course-ui a {
+      min-height: 39px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; font: inherit; box-sizing: border-box;
+    }
+    #multiplayer-ui input, #course-ui input, #course-ui select {
+      min-width: 0; flex: 1; padding: 8px 10px; color: #fff; background: rgba(255,255,255,.08); text-transform: none;
+    }
+    #course-ui select option { color: #0f172a; }
+    #course-seed { min-width: 132px; text-transform: uppercase; letter-spacing: .05em; }
+    #room-code { letter-spacing: .12em; text-transform: uppercase !important; }
+    #multiplayer-ui button, #course-ui button, #course-ui a {
+      padding: 8px 11px; color: #fff; background: #6d28d9; cursor: pointer; white-space: nowrap; text-decoration: none;
+    }
+    #multiplayer-ui button.secondary, #course-ui button.secondary, #course-ui a.secondary { background: #334155; }
+    #multiplayer-ui button:disabled, #multiplayer-ui input:disabled, #course-ui button:disabled, #course-ui input:disabled, #course-ui select:disabled { cursor: not-allowed; opacity: .5; }
+    #multiplayer-status, #course-status { min-height: 20px; margin-top: 8px; color: #e2e8f0; }
+    #multiplayer-status[data-state="ready"], #course-status[data-state="ready"] { color: #86efac; }
+    #multiplayer-status[data-state="warning"], #course-status[data-state="warning"] { color: #fde047; }
+    #multiplayer-status[data-state="error"], #course-status[data-state="error"] { color: #fca5a5; }
+    #player-count, #course-details { margin-top: 3px; color: #94a3b8; font-size: 12px; }
+    body.vr-active #note, body.vr-active #multiplayer-ui, body.vr-active #course-ui { display: none; }
+    @media (max-width: 850px) {
+      #note { max-width: calc(100vw - 24px); }
+      #multiplayer-ui { top: auto; bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); right: auto; }
+      #course-ui { top: 108px; bottom: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="note" data-state="checking">Generating a validated KayKit platforming course…</div>
+
+  <section id="multiplayer-ui" aria-label="Peer-to-peer multiplayer">
+    <h2>Peer-to-Peer Multiplayer</h2>
+    <p>Create a private room or join with a six-character code before pressing Enter VR.</p>
+    <div class="multiplayer-row"><input id="player-name" aria-label="Player name" maxlength="18" value="Quest Player" autocomplete="nickname" /></div>
+    <div class="multiplayer-row">
+      <button id="create-room" type="button">Create Room</button>
+      <input id="room-code" aria-label="Room code" maxlength="6" placeholder="ROOM CODE" autocomplete="off" />
+      <button id="join-room" type="button">Join</button>
+    </div>
+    <div class="multiplayer-row">
+      <button id="copy-room" class="secondary" type="button" disabled>Copy Code</button>
+      <button id="leave-room" class="secondary" type="button" disabled>Leave Room</button>
+    </div>
+    <div id="multiplayer-status" role="status">Loading multiplayer…</div>
+    <div id="player-count">0 / 4 players</div>
+  </section>
+
+  <section id="course-ui" aria-label="Platforming course">
+    <h2 id="course-title">Seeded Platforming Course</h2>
+    <p id="course-description">This route is generated from a reproducible seed and validated before rendering.</p>
+    <div class="course-row">
+      <select id="course-mode" aria-label="Course mode">
+        <option value="calibration">Calibration</option>
+        <option value="generated">Generated</option>
+      </select>
+      <input id="course-seed" aria-label="Course seed" maxlength="18" value="FUNFUN01" autocomplete="off" />
+      <button id="random-seed" class="secondary" type="button">New Seed</button>
+    </div>
+    <div class="course-row">
+      <button id="load-course" type="button">Load Course</button>
+      <button id="copy-course-link" class="secondary" type="button">Copy Course Link</button>
+    </div>
+    <div id="course-status" role="status" data-state="checking">Preparing course…</div>
+    <div id="course-details">Run starts when you leave the first platform.</div>
+    <div class="course-row">
+      <button id="restart-course" class="secondary" type="button">Restart Course</button>
+      <a class="secondary" href="./asset-gallery.html">Asset Gallery</a>
+    </div>
+    <div class="course-hint">Changing mode or seed reloads the page and leaves any multiplayer room. All multiplayer testers must use the same generated course link.</div>
+  </section>
+
+  <noscript>This WebXR game requires JavaScript.</noscript>
+
+  <a-scene
+    renderer="antialias: true; colorManagement: true"
+    vr-mode-ui="enabled: true"
+    webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor, hand-tracking"
+    loading-screen="dotsColor: #38BDF8; backgroundColor: #0F172A"
+    background="color: #BAE6FD"
+    fog="type: linear; color: #BAE6FD; near: 45; far: 95"
+  >
+    <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="6 12 8"></a-entity>
+    <a-sky color="#BAE6FD"></a-sky>
+
+    <a-entity id="player-rig" position="0 0.32 8" gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; floorHeight: -20; playerHeightOffset: 0.68">
+      <a-camera id="player-camera" position="0 1.6 0" wasd-controls-enabled="false"></a-camera>
+      <a-entity id="left-hand" position="-0.35 -0.35 -0.4" tracked-controls="hand: left"><a-sphere id="left-hand-visual" radius="0.12" color="#FF7AA2" opacity="0.95"></a-sphere></a-entity>
+      <a-entity id="right-hand" position="0.35 -0.35 -0.4" tracked-controls="hand: right"><a-sphere id="right-hand-visual" radius="0.12" color="#6FC3FF" opacity="0.95"></a-sphere></a-entity>
+    </a-entity>
+
+    <a-plane position="0 -7 -11" rotation="-90 0 0" width="70" height="70" color="#172554"></a-plane>
+    <a-entity id="course-root"></a-entity>
+
+    <a-plane position="-4.15 3.2 8" rotation="0 90 0" width="6.2" height="2.2" color="#FFFFFF">
+      <a-text id="course-heading-world" value="FUN-FUN VR — PLATFORMING" position="0 0.72 0.01" color="#0F172A" width="5.5" align="center"></a-text>
+      <a-text id="course-subtitle-world" value="Preparing course identity" position="0 0.35 0.01" color="#475569" width="4.8" align="center"></a-text>
+      <a-text id="world-status" value="Course pieces are loading" position="0 -0.02 0.01" color="#334155" width="5" align="center"></a-text>
+      <a-text id="network-status-world" value="Multiplayer offline" position="0 -0.39 0.01" color="#6D28D9" width="5" align="center"></a-text>
+      <a-text value="Push with your hands. Falling returns you to the latest checkpoint." position="0 -0.78 0.01" color="#475569" width="5" align="center"></a-text>
+    </a-plane>
+
+    <a-entity id="remote-players"></a-entity>
+  </a-scene>
+</body>
+</html>
