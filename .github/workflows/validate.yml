@@ -1,0 +1,45 @@
+name: Validate static WebXR game
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: |
+          node --check main.js
+          node --check platformer-course.js
+          node --check course-calibration.js
+          node --check course-modules.js
+          node --check course-selector.js
+          node --check generated-components.js
+          node --check generated-course.js
+          node --check multiplayer.js
+          node --check multiplayer-hardening.js
+      - name: Validate 2,000 generated seeds
+        run: node tests/course-generator.test.mjs
+      - name: Validate generated browser bootstrap
+        run: node tests/generated-bootstrap.test.mjs
+      - name: Parse static HTML entries
+        run: |
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Parser(HTMLParser):
+              pass
+          for name in ("index.html", "generated.html", "asset-gallery.html"):
+              parser = Parser()
+              parser.feed(Path(name).read_text(encoding="utf-8"))
+              print(f"Parsed {name}")
+          PY
