@@ -93,3 +93,16 @@ export const PLATFORMER_ASSET_SOURCE = {
 export function getPlatformerAsset(id) {
   return PLATFORMER_ASSETS.find((asset) => asset.id === id) || null;
 }
+
+// The live course needs one visual-only ramp calibration. The gallery does not.
+if (document.getElementById("course-root")) {
+  import("../../course-calibration.js").catch(function (error) {
+    window.dispatchEvent(new CustomEvent("course-asset-error", {
+      detail: {
+        pieceId: "slope-platform",
+        assetId: "platform-slope-blue",
+        message: `Ramp calibration failed to load: ${error && error.message ? error.message : error}`
+      }
+    }));
+  });
+}
