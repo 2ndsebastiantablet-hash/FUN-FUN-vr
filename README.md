@@ -24,13 +24,13 @@ The current live map is the first handcrafted mechanics course. It uses the Phas
 - two checkpoint triggers
 - fall detection and checkpoint respawning
 - a scaled finish gate and local completion timer
-- collision-matched visual fallbacks if a model fails to load
+- visible wireframe fallbacks if a model fails while course collisions remain active
 
 The run begins when the player leaves the starting platform. Falling below or outside the course returns the player to the most recently activated checkpoint. The course records a local best time in the browser.
 
 ### Why the slope uses stepped collision
 
-The pinned locomotion template supports axis-aligned box colliders. The visible KayKit ramp is therefore backed by ten narrow box steps. This keeps the source movement component intact while providing a stable first approximation of a sloped push surface. A later collision phase can replace this with a dedicated slope solver after headset testing establishes the desired feel.
+The pinned locomotion template supports axis-aligned box colliders. The visible KayKit ramp is therefore backed by ten narrow box steps. The original four-meter-tall mesh is visually compressed to the course’s two-meter rise so it aligns with the approach and checkpoint platforms. This keeps the source movement component intact while providing a stable first approximation of a sloped push surface. A later collision phase can replace this with a dedicated slope solver after headset testing establishes the desired feel.
 
 ### Course manifest
 
@@ -106,11 +106,12 @@ The current build includes:
 
 - `index.html` — live platforming course, VR rig, room UI, course UI, and scene shell
 - `platformer-course.js` — course manifest, KayKit model placement, colliders, slope support, spring, checkpoints, finish, timer, and restart flow
+- `course-calibration.js` — visual-only ramp scaling that aligns the original mesh with the two-meter course rise
 - `main.js` — VR preflight, controller status, lifecycle handling, fall safety, and checkpoint integration
 - `multiplayer.js` — PeerJS room flow, connection mesh, pose sync, remote avatars, and disconnect handling
 - `multiplayer-hardening.js` — validation, timeouts, heartbeat checks, recoverable-error handling, and solo diagnostics
 - `asset-gallery.html` / `asset-gallery.js` — separate KayKit scale inspection scene
-- `assets/platformer/registry.js` — asset IDs, pinned URLs, bounds, checksums, tags, and collision profiles
+- `assets/platformer/registry.js` — asset IDs, pinned URLs, bounds, checksums, tags, collision profiles, and live-course calibration loader
 - `assets/platformer/bundle.js` — asset URL resolver
 - `assets/platformer/KAYKIT_LICENSE.txt` — preserved KayKit license notice
 - `PHASE_1_ASSET_AUDIT.md` — archive inventory and pilot asset decisions
