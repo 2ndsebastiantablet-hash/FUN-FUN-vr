@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0F172A" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FUN-FUN VR Platforming Course</title>
+  <title>FUN-FUN VR Procedural Platforming</title>
 
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
 
@@ -21,6 +21,7 @@
   ></script>
   <script src="./multiplayer.js" defer></script>
   <script type="module" src="./platformer-course.js"></script>
+  <script type="module" src="./course-calibration.js"></script>
   <script type="module" src="./main.js"></script>
 
   <style>
@@ -105,8 +106,20 @@
       align-items: center;
     }
 
+    .course-row {
+      flex-wrap: wrap;
+    }
+
+    .course-hint {
+      margin-top: 7px;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
     #multiplayer-ui input,
     #multiplayer-ui button,
+    #course-ui input,
+    #course-ui select,
     #course-ui button,
     #course-ui a {
       min-height: 39px;
@@ -116,13 +129,25 @@
       box-sizing: border-box;
     }
 
-    #multiplayer-ui input {
+    #multiplayer-ui input,
+    #course-ui input,
+    #course-ui select {
       min-width: 0;
       flex: 1;
       padding: 8px 10px;
       color: #ffffff;
       background: rgba(255, 255, 255, 0.08);
       text-transform: none;
+    }
+
+    #course-ui select option {
+      color: #0f172a;
+    }
+
+    #course-seed {
+      min-width: 132px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     #room-code {
@@ -149,7 +174,9 @@
 
     #multiplayer-ui button:disabled,
     #multiplayer-ui input:disabled,
-    #course-ui button:disabled {
+    #course-ui button:disabled,
+    #course-ui input:disabled,
+    #course-ui select:disabled {
       cursor: not-allowed;
       opacity: 0.5;
     }
@@ -210,7 +237,7 @@
 </head>
 <body>
   <div id="note" data-state="checking">
-    Building the KayKit mechanics course…
+    Building the KayKit platforming course…
   </div>
 
   <section id="multiplayer-ui" aria-label="Peer-to-peer multiplayer">
@@ -233,14 +260,27 @@
   </section>
 
   <section id="course-ui" aria-label="Platforming course">
-    <h2>KayKit Mechanics Course</h2>
-    <p>Cross the platforms, climb the stepped slope, use the spring, and pass through the finish gate.</p>
+    <h2 id="course-title">KayKit Platforming Course</h2>
+    <p id="course-description">Choose the handcrafted calibration route or a validated seeded course.</p>
+    <div class="course-row">
+      <select id="course-mode" aria-label="Course mode">
+        <option value="calibration">Calibration</option>
+        <option value="generated">Generated</option>
+      </select>
+      <input id="course-seed" aria-label="Course seed" maxlength="18" value="FUNFUN01" autocomplete="off" />
+      <button id="random-seed" class="secondary" type="button">New Seed</button>
+    </div>
+    <div class="course-row">
+      <button id="load-course" type="button">Load Course</button>
+      <button id="copy-course-link" class="secondary" type="button">Copy Course Link</button>
+    </div>
     <div id="course-status" role="status" data-state="checking">Preparing course…</div>
     <div id="course-details">Run starts when you leave the first platform.</div>
     <div class="course-row">
       <button id="restart-course" class="secondary" type="button">Restart Course</button>
       <a class="secondary" href="./asset-gallery.html">Asset Gallery</a>
     </div>
+    <div class="course-hint">Changing mode or seed reloads the page and leaves any multiplayer room. All multiplayer testers must use the same generated course link.</div>
   </section>
 
   <noscript>This WebXR game requires JavaScript.</noscript>
@@ -279,10 +319,11 @@
     <a-entity id="course-root"></a-entity>
 
     <a-plane position="-4.15 3.2 8" rotation="0 90 0" width="6.2" height="2.2" color="#FFFFFF">
-      <a-text value="FUN-FUN VR — MECHANICS COURSE" position="0 0.62 0.01" color="#0F172A" width="5.5" align="center"></a-text>
-      <a-text id="world-status" value="Course pieces are loading" position="0 0.12 0.01" color="#334155" width="5" align="center"></a-text>
-      <a-text id="network-status-world" value="Multiplayer offline" position="0 -0.38 0.01" color="#6D28D9" width="5" align="center"></a-text>
-      <a-text value="Push with your hands. Falling returns you to the latest checkpoint." position="0 -0.79 0.01" color="#475569" width="5" align="center"></a-text>
+      <a-text id="course-heading-world" value="FUN-FUN VR — PLATFORMING" position="0 0.72 0.01" color="#0F172A" width="5.5" align="center"></a-text>
+      <a-text id="course-subtitle-world" value="Preparing course identity" position="0 0.35 0.01" color="#475569" width="4.8" align="center"></a-text>
+      <a-text id="world-status" value="Course pieces are loading" position="0 -0.02 0.01" color="#334155" width="5" align="center"></a-text>
+      <a-text id="network-status-world" value="Multiplayer offline" position="0 -0.39 0.01" color="#6D28D9" width="5" align="center"></a-text>
+      <a-text value="Push with your hands. Falling returns you to the latest checkpoint." position="0 -0.78 0.01" color="#475569" width="5" align="center"></a-text>
     </a-plane>
 
     <a-entity id="remote-players"></a-entity>
