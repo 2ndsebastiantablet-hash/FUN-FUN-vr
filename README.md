@@ -10,113 +10,105 @@ The movement system remains based on the exact pinned template requested for thi
 - Commit: `28a426aa6ade789320e2202cfa8d2fe61b46b539`
 - Folder: `templates/gorilla-tag-locomotion`
 
-The game still loads the original `gorilla-locomotion.js` from that immutable commit. `platformer-course.js` adds a small platform-surface extension rather than replacing the source movement system. The extension lets the original launch logic recognize the tops of box-based course pieces as floor-like pushing surfaces.
+The game loads the original `gorilla-locomotion.js` from that immutable commit. The platforming runtimes add platform-top support, checkpoints, springs, finish triggers, and safety behavior without replacing the template's hand pushing, launch averaging, bounce, gravity, drag, or controller tracking.
 
-## KayKit platforming conversion
+## Course modes
 
-The uploaded `KayKit_Platformer_Pack_1.0_FREE.zip` is the source of truth for the game’s platforming art.
+### Calibration course
 
-The current live map is the first handcrafted mechanics course. It uses the Phase 1 pilot pieces to test the systems that procedural modules will later require:
+The repository root remains the handcrafted Phase 2 mechanics course:
 
-- repeated blue landing platforms
-- a large blue slope with ten hidden collision steps
-- a green spring pad with automatic upward and forward launch
-- two checkpoint triggers
-- fall detection and checkpoint respawning
-- a scaled finish gate and local completion timer
-- visible wireframe fallbacks if a model fails while course collisions remain active
+`https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/`
 
-The run begins when the player leaves the starting platform. Falling below or outside the course returns the player to the most recently activated checkpoint. The course records a local best time in the browser.
+It is the stable reference route for measuring hand-push strength, gap distance, ramp feel, spring strength, checkpoint recovery, and Quest performance.
 
-### Why the slope uses stepped collision
+### Generated course
 
-The pinned locomotion template supports axis-aligned box colliders. The visible KayKit ramp is therefore backed by ten narrow box steps. The original four-meter-tall mesh is visually compressed to the course’s two-meter rise so it aligns with the approach and checkpoint platforms. This keeps the source movement component intact while providing a stable first approximation of a sloped push surface. A later collision phase can replace this with a dedicated slope solver after headset testing establishes the desired feel.
+The generated entry assembles a validated route from a reproducible seed:
 
-### Course manifest
+`https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/generated.html?mode=generated&seed=FUNFUN01`
 
-`platformer-course.js` contains a versioned handcrafted manifest:
+Use the course controls to select **Generated**, enter a seed, create a random seed, load the route, or copy its exact link. Changing mode or seed reloads the page and leaves any active multiplayer room.
 
-- version: `mechanics-course-v1`
-- seed label: `PHASE-2-HANDCRAFTED`
-- eleven placed visual pieces
-- nineteen locomotion collision boxes
-- two checkpoints
-- one spring launcher
-- one finish trigger
+The same normalized seed produces the same module list, platform positions, checkpoints, spring sequence, finish gate, safety bounds, and map checksum under generator version `module-generator-v1`.
 
-This manifest is intentionally deterministic and will become the reference course for calibrating procedural-generation limits.
+## Procedural module foundation
 
-## Asset gallery
+The first procedural library intentionally uses conservative modules:
 
-The separate gallery remains available at:
+- straight platform
+- left and right side steps
+- gentle rise
+- left and right rising steps
+- gentle drop
+- required spring rise
+- two checkpoint positions
+- finish platform and finish gate
+
+Every generated manifest is rejected unless it passes checks for unique IDs, forward progress, lateral limits, height limits, gap limits, checkpoint order, spring presence, finish presence, and expected collision count.
+
+The generated route currently contains:
+
+- 10 visible KayKit pieces
+- 18 locomotion colliders
+- 2 checkpoints
+- 1 spring launcher
+- 1 finish trigger
+- a per-seed local timer and best time
+- a map checksum for bug reproduction
+
+See `PHASE_3_PROCEDURAL_MODULES.md` for the rules and current limitations.
+
+## KayKit assets
+
+The uploaded `KayKit_Platformer_Pack_1.0_FREE.zip` remains the art source of truth. The current runtime uses the registered pilot assets:
+
+- blue landing platform
+- blue slope in calibration mode
+- green spring pad
+- wide finish gate
+
+The separate inspection gallery remains available at:
 
 `https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/asset-gallery.html`
 
-It displays the four pilot assets on labeled pedestals for desktop and Quest scale inspection.
+## Multiplayer
 
-## Peer-to-peer multiplayer
+Private PeerJS/WebRTC rooms support up to four players. Head and hand poses are synchronized and remote players appear in the shared world.
 
-The current build supports private rooms for up to four players.
+For generated multiplayer, every device must open the exact same generated course link before creating or joining the room. The map is deterministic, but course selection and course state are still local in this phase. Checkpoints, spring events, timers, finish state, and best times are not yet network-authoritative.
 
-- one player creates a room and receives a six-character code
-- other players join with that code before pressing **Enter VR**
-- PeerJS handles discovery and signaling
-- head and hand poses travel directly between browsers through WebRTC data channels
-- remote players appear as a head, body, two hands, and name label
-- pose updates are sent about 15 times per second
-- the room uses a small full-mesh layout
-- the host closes the room when leaving
+The existing multiplayer hardening remains in place, including timeouts, heartbeat packets, stale-peer cleanup, pose validation, protocol checks, host-only room control, duplicate-connection cleanup, recoverable signaling behavior, and the solo WebRTC diagnostic.
 
-### Multiplayer hardening
+## Safety and recovery
 
-The multiplayer layer includes:
+Both course modes retain:
 
-- connection timeouts
-- heartbeat packets and stale-peer removal
-- incoming pose bounds and quaternion validation
-- message-size and type limits
-- protocol-version checks
-- host-only room-control trust
-- duplicate connection cleanup
-- recovery for signaling interruptions
-- isolated multiplayer errors so solo VR can remain usable
-- a **Run Solo Network Test** button
-
-### Current multiplayer limitation
-
-The mechanics course is deterministic and appears identically for every player, but course state is still local. Checkpoint activation, spring events, timers, best times, and finish state are not synchronized between players yet. Shared course state belongs to the later multiplayer procedural-synchronization phase.
-
-The static build uses public STUN servers but no dedicated TURN relay, so unusually restrictive networks may still block direct WebRTC connections.
-
-## VR safety and recovery
-
-The current build includes:
-
-- startup checks for locomotion, platform extensions, course pieces, and collision surfaces
-- HTTPS and immersive-VR support checks
-- controller-pose stabilization after entering VR
-- automatic reset after falling or leaving the course bounds
+- normal A-Frame **Enter VR**
+- Quest controller tracking
+- hand-push locomotion
+- gravity and drag
+- fall detection
 - checkpoint-aware respawning
-- motion clearing after tab visibility changes and VR exits
+- motion clearing after resets and VR exits
 - model-load fallbacks
-- desktop camera-height compensation
-- separate course and multiplayer error reporting
+- HTTPS and immersive-VR checks
+- isolated multiplayer errors
 
-## Project files
+## Important project files
 
-- `index.html` — live platforming course, VR rig, room UI, course UI, and scene shell
-- `platformer-course.js` — course manifest, KayKit model placement, colliders, slope support, spring, checkpoints, finish, timer, and restart flow
-- `course-calibration.js` — visual-only ramp scaling that aligns the original mesh with the two-meter course rise
-- `main.js` — VR preflight, controller status, lifecycle handling, fall safety, and checkpoint integration
-- `multiplayer.js` — PeerJS room flow, connection mesh, pose sync, remote avatars, and disconnect handling
-- `multiplayer-hardening.js` — validation, timeouts, heartbeat checks, recoverable-error handling, and solo diagnostics
-- `asset-gallery.html` / `asset-gallery.js` — separate KayKit scale inspection scene
-- `assets/platformer/registry.js` — asset IDs, pinned URLs, bounds, checksums, tags, collision profiles, and live-course calibration loader
-- `assets/platformer/bundle.js` — asset URL resolver
-- `assets/platformer/KAYKIT_LICENSE.txt` — preserved KayKit license notice
-- `PHASE_1_ASSET_AUDIT.md` — archive inventory and pilot asset decisions
-- `PHASE_2_MECHANICS_COURSE.md` — deterministic course geometry, movement adaptation, spring values, and reset rules
-- `PLAYTEST_CHECKLIST.md` — ordered Quest, platforming, safety, and multiplayer test procedure
+- `index.html` — calibration entry and course-selection controls
+- `generated.html` — generated-course entry
+- `course-selector.js` — mode, seed, random-seed, navigation, and link-copy controls
+- `course-modules.js` — deterministic generator, validation, URLs, checksums, and module metadata
+- `platformer-course.js` — handcrafted calibration course
+- `generated-course.js` — generated manifest rendering, models, colliders, checkpoints, timing, and restart flow
+- `generated-components.js` — platform support, spring, checkpoint, and finish A-Frame components
+- `main.js` — VR preflight, controller status, safety resets, and lifecycle handling
+- `multiplayer.js` / `multiplayer-hardening.js` — room flow and network safeguards
+- `tests/course-generator.test.mjs` — validates 2,000 seeds
+- `tests/generated-bootstrap.test.mjs` — verifies generated browser bootstrapping
+- `.github/workflows/validate.yml` — automatic syntax, generator, bootstrap, and HTML checks
 
 ## Hosting
 
