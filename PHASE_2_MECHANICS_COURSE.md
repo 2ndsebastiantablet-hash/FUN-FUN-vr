@@ -8,7 +8,7 @@ This phase replaces the temporary colored movement-test map with a deterministic
 
 1. Start platform — top height 1 m
 2. Approach platform — 0.7 m gap
-3. KayKit slope — visible 4 × 4 × 4 m ramp backed by ten collision steps
+3. KayKit slope — source 4 × 4 × 4 m ramp visually compressed to a 4 × 2 × 4 m rise and backed by ten collision steps
 4. Checkpoint platform — top height 3 m
 5. Spring platform and green spring pad
 6. Spring landing — top height 5.5 m and checkpoint 2
@@ -37,9 +37,11 @@ The source demo uses a global floor. The mechanics course moves that floor to `-
 
 It does not replace gravity, drag, push history, launch averaging, hand tracking, or body collision.
 
-## Slope collision
+## Slope collision and visual calibration
 
-The source locomotion collider supports axis-aligned boxes only. The ramp therefore uses ten narrow boxes with increasing top heights. The visible KayKit model remains continuous; the collision approximation rises in 0.2 m increments.
+The source locomotion collider supports axis-aligned boxes only. The ramp therefore uses ten narrow boxes with increasing top heights. The collision approximation rises in 0.2 m increments from the one-meter approach surface to the three-meter checkpoint surface.
+
+The original KayKit mesh rises four meters. `course-calibration.js` compresses only the displayed mesh to half-height and lifts it into alignment with the two-meter collision rise. The source asset itself is not modified.
 
 This is intentionally a calibration implementation. Headset testing will determine whether ten steps are smooth enough or whether a true slope solver is required.
 
