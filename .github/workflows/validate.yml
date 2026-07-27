@@ -25,12 +25,16 @@ jobs:
           node --check course-selector.js
           node --check generated-components.js
           node --check generated-course.js
+          node --check comfort-fixes.js
+          node --check run-progression.js
           node --check multiplayer.js
           node --check multiplayer-hardening.js
       - name: Validate 2,000 generated seeds
         run: node tests/course-generator.test.mjs
       - name: Validate generated browser bootstrap
         run: node tests/generated-bootstrap.test.mjs
+      - name: Validate comfort and progression
+        run: node tests/comfort-progression.test.mjs
       - name: Parse static HTML entries
         run: |
           python - <<'PY'
