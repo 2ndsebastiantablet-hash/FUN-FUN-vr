@@ -9,6 +9,8 @@ const BODY_RADIUS = 0.32;
 const BODY_HEIGHT = PLAYER_HEIGHT_OFFSET + BODY_RADIUS;
 const IDLE_STOP_SPEED = 0.42;
 const GROUND_BRAKE_STRENGTH = 9.5;
+const adjustedSpawns = new WeakSet();
+const adjustedManifests = new WeakSet();
 
 function colliderBounds(colliderEl, center, min, max) {
   const component = colliderEl?.components?.["locomotion-collider"];
@@ -83,16 +85,16 @@ function registerComfortGrounding() {
 }
 
 function adjustSpawnObject(spawn) {
-  if (!spawn || spawn.__comfortAdjusted) return spawn;
+  if (!spawn || typeof spawn !== "object" || adjustedSpawns.has(spawn)) return spawn;
   if (Number.isFinite(Number(spawn.y))) spawn.y = Number(spawn.y) + SPAWN_Y_ADJUSTMENT;
-  Object.defineProperty(spawn, "__comfortAdjusted", { value: true, configurable: true });
+  adjustedSpawns.add(spawn);
   return spawn;
 }
 
 function adjustSpawnArray(spawn) {
-  if (!Array.isArray(spawn) || spawn.__comfortAdjusted) return spawn;
+  if (!Array.isArray(spawn) || adjustedSpawns.has(spawn)) return spawn;
   if (Number.isFinite(Number(spawn[1]))) spawn[1] = Number(spawn[1]) + SPAWN_Y_ADJUSTMENT;
-  Object.defineProperty(spawn, "__comfortAdjusted", { value: true, configurable: true });
+  adjustedSpawns.add(spawn);
   return spawn;
 }
 
@@ -115,12 +117,12 @@ function configureRig() {
 
 function adjustBuiltCourse() {
   const manifest = window.funFunCourseManifest;
-  if (manifest && !manifest.__comfortAdjusted) {
+  if (manifest && !adjustedManifests.has(manifest)) {
     adjustSpawnObject(manifest.spawn);
     for (const piece of manifest.pieces || []) {
       if (piece.checkpoint?.spawn) adjustSpawnArray(piece.checkpoint.spawn);
     }
-    Object.defineProperty(manifest, "__comfortAdjusted", { value: true, configurable: true });
+    adjustedManifests.add(manifest);
   }
 
   document.querySelectorAll("[course-checkpoint-trigger]").forEach((entity) => {
@@ -174,7 +176,8 @@ scene?.addEventListener("enter-vr", () => {
     const safety = rig?.components?.["playtest-safety"];
     const spawn = window.funFunCourseManifest?.spawn;
     if (spawn && safety?.setSpawn) safety.setSpawn(spawn);
-    if (spawn && safety?.resetPlayer) safety.resetPlayer("Comfort height initialized");
+    if (spawn && rig) rig.object3D.position.set(spawn.x, spawn.y, spawn.z);
+    if (safety?.resetMotionOnly) safety.resetMotionOnly();
   }, 575);
 });
 
