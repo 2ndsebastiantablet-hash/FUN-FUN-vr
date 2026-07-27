@@ -3,7 +3,6 @@ const GENERATED_COURSE_VERSION = "procedural-course-v1";
 const DEFAULT_SEED = "FUNFUN01";
 const START_POSITION = Object.freeze({ x: 0, y: 0, z: 8 });
 const RIG_HEIGHT_ABOVE_PLATFORM_BASE = 0.32;
-const PLATFORM_COLLIDER = Object.freeze({ position: [0, 0.5, 0], size: [4, 1, 4] });
 
 const SAFE_MODULES = Object.freeze([
   Object.freeze({ id: "straight", dx: 0, dy: 0, dz: -4.6, difficulty: 1 }),
@@ -51,11 +50,11 @@ function round(value, places = 3) {
   return Math.round(value * factor) / factor;
 }
 
-function cloneCollider() {
-  return {
-    position: [...PLATFORM_COLLIDER.position],
-    size: [...PLATFORM_COLLIDER.size]
-  };
+function splitPlatformColliders() {
+  return [
+    { position: [0, 0.5, -1], size: [4, 1, 2] },
+    { position: [0, 0.5, 1], size: [4, 1, 2] }
+  ];
 }
 
 function platformPiece(id, position, extra = {}) {
@@ -63,7 +62,7 @@ function platformPiece(id, position, extra = {}) {
     id,
     assetId: "platform-square-blue",
     position: [round(position.x), round(position.y), round(position.z)],
-    colliders: [cloneCollider()],
+    colliders: splitPlatformColliders(),
     ...extra
   };
 }
@@ -79,7 +78,11 @@ function normalizePosition(position) {
 function chooseModule(random, state, previousIds, difficulty) {
   const candidates = SAFE_MODULES.filter((module) => {
     if (module.difficulty > difficulty) return false;
-    if (previousIds.length >= 2 && previousIds.at(-1) === module.id && previousIds.at(-2) === module.id) {
+    if (
+      previousIds.length >= 2 &&
+      previousIds[previousIds.length - 1] === module.id &&
+      previousIds[previousIds.length - 2] === module.id
+    ) {
       return false;
     }
 
@@ -110,7 +113,10 @@ function addSpringSequence(pieces, state, idPrefix) {
     id: `${idPrefix}-pad`,
     assetId: "spring-pad-green",
     position: [round(state.x), round(state.y + 1), round(state.z)],
-    colliders: [{ position: [0, 0.5, 0], size: [1.5, 1, 1.5] }],
+    colliders: [
+      { position: [0, 0.5, -0.375], size: [1.5, 1, 0.75] },
+      { position: [0, 0.5, 0.375], size: [1.5, 1, 0.75] }
+    ],
     spring: {
       launchSpeed: 8.4,
       forwardSpeed: 4.5,
@@ -246,7 +252,11 @@ export function generateCourseManifest(seedValue) {
   pieces.push({
     id: "generated-finish-gate",
     assetId: "finish-wide",
-    position: [finishPlatformPosition.x, round(finishPlatformPosition.y + 1), round(finishPlatformPosition.z - 1.1)],
+    position: [
+      finishPlatformPosition.x,
+      round(finishPlatformPosition.y + 1),
+      round(finishPlatformPosition.z - 1.1)
+    ],
     scale: 0.45,
     finish: {
       radiusX: 1.85,
@@ -284,7 +294,9 @@ export function generateCourseManifest(seedValue) {
 
 export function validateCourseManifest(manifest) {
   const errors = [];
-  if (!manifest || !Array.isArray(manifest.pieces)) return { valid: false, errors: ["manifest pieces are missing"] };
+  if (!manifest || !Array.isArray(manifest.pieces)) {
+    return { valid: false, errors: ["manifest pieces are missing"] };
+  }
 
   const ids = new Set();
   for (const piece of manifest.pieces) {
@@ -329,16 +341,18 @@ export function validateCourseManifest(manifest) {
 }
 
 export function createCourseUrl({ mode, seed }, locationLike = globalThis.location) {
-  const base = new URL(locationLike?.href || "https://example.invalid/");
+  const current = new URL(locationLike?.href || "https://example.invalid/");
+  const directory = current.pathname.endsWith("/")
+    ? current.pathname
+    : current.pathname.slice(0, current.pathname.lastIndexOf("/") + 1);
+  current.pathname = mode === "generated" ? `${directory}generated.html` : directory;
+  current.search = "";
   if (mode === "generated") {
-    base.searchParams.set("mode", "generated");
-    base.searchParams.set("seed", normalizeSeed(seed));
-  } else {
-    base.searchParams.delete("mode");
-    base.searchParams.delete("seed");
+    current.searchParams.set("mode", "generated");
+    current.searchParams.set("seed", normalizeSeed(seed));
   }
-  base.hash = "";
-  return base.toString();
+  current.hash = "";
+  return current.toString();
 }
 
 export function setupCourseModeControls({ documentLike = globalThis.document, locationLike = globalThis.location } = {}) {
