@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
+  <meta name="theme-color" content="#0F172A" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FUN-FUN VR Multiplayer</title>
+  <title>FUN-FUN VR Platforming Course</title>
 
-  <!-- A-Frame includes WebXR support and automatically provides the Enter VR button. -->
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
 
-  <!-- Exact locomotion component pinned to the requested source commit. -->
+  <!-- Exact locomotion source remains pinned to the requested template commit. -->
   <script
     src="https://cdn.jsdelivr.net/gh/2ndsebastiantablet-hash/feeble@28a426aa6ade789320e2202cfa8d2fe61b46b539/templates/gorilla-tag-locomotion/gorilla-locomotion.js"
     onerror="window.__LOCOMOTION_LOAD_FAILED__ = true;"
   ></script>
 
-  <!-- PeerJS provides WebRTC room discovery/signaling; pose data then travels peer-to-peer. -->
   <script
     src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"
     onerror="window.__PEERJS_LOAD_FAILED__ = true;"
   ></script>
   <script src="./multiplayer.js" defer></script>
+  <script type="module" src="./platformer-course.js"></script>
   <script type="module" src="./main.js"></script>
 
   <style>
@@ -35,18 +34,19 @@
       margin: 0;
       overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #111827;
+      background: #0f172a;
     }
 
     #note,
-    #multiplayer-ui {
+    #multiplayer-ui,
+    #course-ui {
       position: fixed;
       z-index: 20;
       padding: 10px 12px;
       border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 10px;
       color: #ffffff;
-      background: rgba(17, 24, 39, 0.9);
+      background: rgba(15, 23, 42, 0.92);
       font-size: 14px;
       line-height: 1.45;
       box-sizing: border-box;
@@ -55,7 +55,7 @@
     #note {
       top: max(12px, env(safe-area-inset-top));
       left: max(12px, env(safe-area-inset-left));
-      max-width: min(410px, calc(100vw - 48px));
+      max-width: min(430px, calc(100vw - 48px));
       pointer-events: none;
     }
 
@@ -78,25 +78,37 @@
       width: min(390px, calc(100vw - 24px));
     }
 
-    #multiplayer-ui h2 {
+    #course-ui {
+      left: max(12px, env(safe-area-inset-left));
+      bottom: max(12px, env(safe-area-inset-bottom));
+      width: min(430px, calc(100vw - 24px));
+    }
+
+    #multiplayer-ui h2,
+    #course-ui h2 {
       margin: 0 0 4px;
       font-size: 17px;
     }
 
-    #multiplayer-ui p {
+    #multiplayer-ui p,
+    #course-ui p {
       margin: 4px 0 8px;
       color: #cbd5e1;
       font-size: 12px;
     }
 
-    .multiplayer-row {
+    .multiplayer-row,
+    .course-row {
       display: flex;
       gap: 7px;
       margin-top: 7px;
+      align-items: center;
     }
 
     #multiplayer-ui input,
-    #multiplayer-ui button {
+    #multiplayer-ui button,
+    #course-ui button,
+    #course-ui a {
       min-height: 39px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
@@ -118,50 +130,62 @@
       text-transform: uppercase !important;
     }
 
-    #multiplayer-ui button {
+    #multiplayer-ui button,
+    #course-ui button,
+    #course-ui a {
       padding: 8px 11px;
       color: #ffffff;
       background: #6d28d9;
       cursor: pointer;
       white-space: nowrap;
+      text-decoration: none;
     }
 
-    #multiplayer-ui button.secondary {
+    #multiplayer-ui button.secondary,
+    #course-ui button.secondary,
+    #course-ui a.secondary {
       background: #334155;
     }
 
     #multiplayer-ui button:disabled,
-    #multiplayer-ui input:disabled {
+    #multiplayer-ui input:disabled,
+    #course-ui button:disabled {
       cursor: not-allowed;
       opacity: 0.5;
     }
 
-    #multiplayer-status {
+    #multiplayer-status,
+    #course-status {
       min-height: 20px;
       margin-top: 8px;
       color: #e2e8f0;
     }
 
-    #multiplayer-status[data-state="ready"] {
+    #multiplayer-status[data-state="ready"],
+    #course-status[data-state="ready"] {
       color: #86efac;
     }
 
-    #multiplayer-status[data-state="warning"] {
+    #multiplayer-status[data-state="warning"],
+    #course-status[data-state="warning"] {
       color: #fde047;
     }
 
-    #multiplayer-status[data-state="error"] {
+    #multiplayer-status[data-state="error"],
+    #course-status[data-state="error"] {
       color: #fca5a5;
     }
 
-    #player-count {
+    #player-count,
+    #course-details {
       margin-top: 3px;
       color: #94a3b8;
       font-size: 12px;
     }
 
     body.vr-active #note,
-    body.vr-active #multiplayer-ui {
+    body.vr-active #multiplayer-ui,
+    body.vr-active #course-ui {
       display: none;
     }
 
@@ -176,12 +200,17 @@
         left: max(12px, env(safe-area-inset-left));
         right: auto;
       }
+
+      #course-ui {
+        top: 108px;
+        bottom: auto;
+      }
     }
   </style>
 </head>
 <body>
   <div id="note" data-state="checking">
-    Checking the VR scene and movement system…
+    Building the KayKit mechanics course…
   </div>
 
   <section id="multiplayer-ui" aria-label="Peer-to-peer multiplayer">
@@ -203,23 +232,35 @@
     <div id="player-count">0 / 4 players</div>
   </section>
 
-  <noscript>This WebXR test requires JavaScript.</noscript>
+  <section id="course-ui" aria-label="Platforming course">
+    <h2>KayKit Mechanics Course</h2>
+    <p>Cross the platforms, climb the stepped slope, use the spring, and pass through the finish gate.</p>
+    <div id="course-status" role="status" data-state="checking">Preparing course…</div>
+    <div id="course-details">Run starts when you leave the first platform.</div>
+    <div class="course-row">
+      <button id="restart-course" class="secondary" type="button">Restart Course</button>
+      <a class="secondary" href="./asset-gallery.html">Asset Gallery</a>
+    </div>
+  </section>
+
+  <noscript>This WebXR game requires JavaScript.</noscript>
 
   <a-scene
     renderer="antialias: true; colorManagement: true"
     vr-mode-ui="enabled: true"
     webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor, hand-tracking"
-    loading-screen="dotsColor: #7C3AED; backgroundColor: #111827"
-    background="color: #CFE8FF"
+    loading-screen="dotsColor: #38BDF8; backgroundColor: #0F172A"
+    background="color: #BAE6FD"
+    fog="type: linear; color: #BAE6FD; near: 45; far: 95"
   >
-    <a-entity light="type: ambient; intensity: 0.72"></a-entity>
-    <a-entity light="type: directional; intensity: 0.9" position="3 6 2"></a-entity>
-    <a-sky color="#CFE8FF"></a-sky>
+    <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="6 12 8"></a-entity>
+    <a-sky color="#BAE6FD"></a-sky>
 
     <a-entity
       id="player-rig"
-      position="0 0 4"
-      gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; playerHeightOffset: 0.68"
+      position="0 0.32 8"
+      gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; floorHeight: -20; playerHeightOffset: 0.68"
     >
       <a-camera id="player-camera" position="0 1.6 0" wasd-controls-enabled="false"></a-camera>
 
@@ -232,40 +273,17 @@
       </a-entity>
     </a-entity>
 
-    <a-plane
-      position="0 0 0"
-      rotation="-90 0 0"
-      width="24"
-      height="24"
-      color="#4FAD5B"
-      locomotion-collider="type: floor; size: 24 0 24"
-    ></a-plane>
+    <!-- Visual void only. It has no locomotion collider, so falling remains possible. -->
+    <a-plane position="0 -7 -11" rotation="-90 0 0" width="70" height="70" color="#172554"></a-plane>
 
-    <a-box position="0 1 -3" width="1.8" height="2" depth="1.8" color="#7C3AED"
-      locomotion-collider="type: box; size: 1.8 2 1.8"></a-box>
-    <a-box position="-2.2 1.5 -5" width="1.6" height="3" depth="1.6" color="#F28749"
-      locomotion-collider="type: box; size: 1.6 3 1.6"></a-box>
-    <a-box position="2.4 0.8 -4.5" width="2.4" height="1.6" depth="1.6" color="#2563EB"
-      locomotion-collider="type: box; size: 2.4 1.6 1.6"></a-box>
+    <a-entity id="course-root"></a-entity>
 
-    <a-box position="0 1.25 -7" width="10" height="2.5" depth="0.6" color="#E35D6A"
-      locomotion-collider="type: box; size: 10 2.5 0.6"></a-box>
-    <a-box position="-7 1.25 0" width="0.6" height="2.5" depth="14" color="#64748B"
-      locomotion-collider="type: box; size: 0.6 2.5 14"></a-box>
-    <a-box position="7 1.25 0" width="0.6" height="2.5" depth="14" color="#64748B"
-      locomotion-collider="type: box; size: 0.6 2.5 14"></a-box>
-    <a-box position="0 1.25 7" width="14" height="2.5" depth="0.6" color="#64748B"
-      locomotion-collider="type: box; size: 14 2.5 0.6"></a-box>
-
-    <a-plane position="0 3.25 -6.65" width="6.2" height="1.55" color="#FFFFFF">
-      <a-text value="FUN-FUN VR - HAND LOCOMOTION" position="0 0.35 0.01" color="#111827" width="5.4" align="center"></a-text>
-      <a-text id="world-status" value="Scene checks are running" position="0 0 0.01" color="#334155" width="5" align="center"></a-text>
-      <a-text id="network-status-world" value="Multiplayer offline" position="0 -0.35 0.01" color="#6D28D9" width="5" align="center"></a-text>
+    <a-plane position="-4.15 3.2 8" rotation="0 90 0" width="6.2" height="2.2" color="#FFFFFF">
+      <a-text value="FUN-FUN VR — MECHANICS COURSE" position="0 0.62 0.01" color="#0F172A" width="5.5" align="center"></a-text>
+      <a-text id="world-status" value="Course pieces are loading" position="0 0.12 0.01" color="#334155" width="5" align="center"></a-text>
+      <a-text id="network-status-world" value="Multiplayer offline" position="0 -0.38 0.01" color="#6D28D9" width="5" align="center"></a-text>
+      <a-text value="Push with your hands. Falling returns you to the latest checkpoint." position="0 -0.79 0.01" color="#475569" width="5" align="center"></a-text>
     </a-plane>
-
-    <a-ring position="0 0.012 4" rotation="-90 0 0" radius-inner="0.42" radius-outer="0.5" color="#FFFFFF"></a-ring>
-    <a-ring position="0 0.012 1" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.26" color="#FFFFFF"></a-ring>
-    <a-ring position="0 0.012 -2" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.26" color="#FFFFFF"></a-ring>
 
     <a-entity id="remote-players"></a-entity>
   </a-scene>
