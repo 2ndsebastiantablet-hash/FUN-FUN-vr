@@ -93,11 +93,12 @@ assert.match(rotatingSource, /expectedRotatorCount: 3/);
 assert.match(rotatingSource, /slow-sweeper-arena/);
 assert.match(rotatingSource, /twin-spinner-arena/);
 assert.match(rotatingSource, /reverse-sweeper-arena/);
-assert.match(rotatingHtml, /rotating-obstacle mechanics laboratory/i);
+assert.match(rotatingHtml, /giant rotating wall lab/i);
 assert.match(rotatingHtml, /rotating-lab\.js/);
+assert.match(rotatingHtml, /rotating-overdrive\.js/);
 assert.match(movingHtml, /lab-collision-tuning\.js/);
 assert.match(movingHtml, /rotating-lab\.html/);
 assert.match(tuningSource, /size: \[3\.92, 1, 1\.94\]/);
 assert.match(tuningSource, /size: \[2\.54, 0\.65, 1\.26\]/);
 
-console.log("Rotating-obstacle timing, contact, knockback, lab structure, and collider tuning tests passed.");
+console.log("Rotating-obstacle timing, contact, knockback, giant-wall lab structure, and collider tuning tests passed.");
