@@ -1,3 +1,4 @@
+import "./runtime-error-guard.js";
 import { createCourseUrl, readCourseRequest, setupCourseModeControls } from "./course-modules.js";
 
 function start() {
