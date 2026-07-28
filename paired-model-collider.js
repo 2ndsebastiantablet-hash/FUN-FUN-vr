@@ -1,8 +1,8 @@
 // Visible-model + invisible-solid twin collision system.
 // Each approved structure is loaded twice: one normal KayKit model for rendering
-// and one hidden copy that supplies its measured bounds. The hidden copy is
-// converted into an optimized compound of invisible solid bodies for both the
-// Gorilla locomotion controller and the real rigid-body physics world.
+// and one hidden copy that supplies its measured world bounds. The hidden copy is
+// converted into an optimized compound of invisible world-aligned solid bodies
+// used by both Gorilla locomotion and the Cannon rigid-body physics world.
 
 function finiteNumber(value, fallback = 0) {
   const number = Number(value);
@@ -83,27 +83,19 @@ function registerBrowserComponent() {
       this.proxies?.forEach((proxy) => proxy.remove());
     },
     buildFromTwin: function () {
-      if (this.ready || !this.el.object3D?.parent) return;
+      if (this.ready || !this.el.object3D) return;
       this.el.object3D.updateWorldMatrix(true, true);
       const box = new THREE.Box3().setFromObject(this.el.object3D);
       if (box.isEmpty()) return;
       const worldCenter = box.getCenter(new THREE.Vector3());
       const worldSize = box.getSize(new THREE.Vector3());
       worldSize.z = Math.max(worldSize.z, Math.max(0.08, this.data.minimumDepth));
-
-      const parentObject = this.el.object3D.parent;
-      const localCenter = parentObject.worldToLocal(worldCenter.clone());
-      const parentScale = new THREE.Vector3();
-      parentObject.getWorldScale(parentScale);
-      const localSize = {
-        x: worldSize.x / Math.max(1e-6, Math.abs(parentScale.x)),
-        y: worldSize.y / Math.max(1e-6, Math.abs(parentScale.y)),
-        z: worldSize.z / Math.max(1e-6, Math.abs(parentScale.z))
-      };
       const parts = collisionTwinParts(this.data.profile, {
-        center: { x: localCenter.x, y: localCenter.y, z: localCenter.z },
-        size: localSize
+        center: { x: worldCenter.x, y: worldCenter.y, z: worldCenter.z },
+        size: { x: worldSize.x, y: worldSize.y, z: worldSize.z }
       });
+      const proxyRoot = document.getElementById("course-root") || this.el.sceneEl;
+      if (!proxyRoot) return;
 
       this.proxies = parts.map((part, index) => {
         const proxy = document.createElement("a-box");
@@ -116,7 +108,7 @@ function registerBrowserComponent() {
         proxy.setAttribute("material", "opacity: 0.001; transparent: true; depthWrite: false; color: #FFFFFF");
         proxy.setAttribute("locomotion-collider", `type: box; size: ${part.size.x} ${part.size.y} ${part.size.z}`);
         proxy.setAttribute("static-body", "shape: box");
-        this.el.parentElement.appendChild(proxy);
+        proxyRoot.appendChild(proxy);
         return proxy;
       });
 
