@@ -1,17 +1,36 @@
 # FUN-FUN VR — Quest Playtest Checklist
 
-Use this order so loading, movement, generation, safety, and multiplayer problems are easy to isolate.
+Use this order so loading, camera height, movement, collectibles, generation, safety, and multiplayer problems are easy to isolate.
 
-## 1. Calibration page
+## 1. Camera height and standing stability
 
-- Open the main GitHub Pages URL.
+- Open the main GitHub Pages URL and enter VR.
+- Confirm the camera feels slightly higher than the previous build but remains much lower than the original elevated setup.
+- Stand normally and confirm both controller spheres can reach the platform without excessive crouching.
+- Hold both controllers still for several seconds.
+- Confirm the player settles completely instead of sliding continuously across the platform.
+- Perform a strong one-hand and two-hand launch and confirm airborne distance is not shortened by the grounded braking.
+- Exit and re-enter VR, then confirm the same camera height returns.
+
+## 2. Calibration page
+
 - Confirm **Calibration** is selected.
 - Confirm the handcrafted ramp and spring course still appears.
 - Confirm the page reports **Preflight passed** rather than a red error.
-- Enter VR and verify both controller spheres track normally.
 - Confirm the calibration course still supports platform pushes, the ramp, spring, checkpoints, finish, and restart.
+- Confirm three yellow rotating shards appear above separate course platforms.
 
-## 2. Generated page and seed controls
+## 3. Collectible behavior
+
+- Walk through the first shard and confirm it shrinks and disappears once.
+- Confirm the run-performance line changes from `0/3 shards` to `1/3 shards`.
+- Collect the other two shards and confirm the world status reports all shards collected.
+- Finish the course and confirm the result includes **FULL CLEAR**.
+- Restart the course and confirm all three shards reappear.
+- Finish another run while intentionally missing one shard and confirm the course still completes without **FULL CLEAR**.
+- Confirm the shard visuals never push, block, snag, or change the player’s movement.
+
+## 4. Generated page and seed controls
 
 - Exit VR before changing modes.
 - Select **Generated** and press **Load Course**.
@@ -19,16 +38,17 @@ Use this order so loading, movement, generation, safety, and multiplayer problem
 - Confirm the in-world sign shows the seed and an eight-character map checksum.
 - Press **Copy Course Link** and paste the result somewhere to confirm it includes the same seed.
 - Press **New Seed**, then **Load Course**, and confirm the layout changes.
-- Reopen the original copied link and confirm the original layout and checksum return.
+- Reopen the original copied link and confirm the original layout, checksum, and shard positions return.
 
-## 3. Generated course structure
+## 5. Generated course structure
 
-- Confirm the route contains ordinary blue platforms, two green checkpoint rings, a green spring pad, and a finish gate.
+- Confirm the route contains ordinary blue platforms, two green checkpoint rings, a green spring pad, a finish gate, and three yellow shards.
 - Confirm all KayKit models load or a visible wireframe fallback appears.
 - Confirm the map contains no overlapping platforms, backwards sections, impossible sideways jumps, or hidden platforms.
+- Confirm each shard is above a real landing platform rather than floating over the void.
 - Confirm the route always moves generally forward from the start toward the finish.
 
-## 4. Generated locomotion
+## 6. Generated locomotion
 
 - Push from the starting platform with one hand and then two hands.
 - Confirm platform tops behave as floors.
@@ -36,24 +56,27 @@ Use this order so loading, movement, generation, safety, and multiplayer problem
 - Confirm hands do not snag at the seam between each platform’s two collision boxes.
 - Intentionally miss several jumps and confirm gravity and checkpoint recovery work.
 - Land near edges and confirm the body does not pass through the platform.
+- Stand still after each landing and confirm unwanted horizontal velocity reaches zero.
 
-## 5. Checkpoints and spring
+## 7. Checkpoints and spring
 
 - Reach checkpoint 1 and confirm the status changes.
-- Fall immediately afterward and confirm you return to checkpoint 1.
+- Fall immediately afterward and confirm you return to checkpoint 1 at the tuned camera height.
 - Step onto the spring and confirm it launches forward and upward only once.
 - Land on the spring checkpoint and confirm checkpoint 2 activates.
-- Fall again and confirm you return to checkpoint 2.
+- Fall again and confirm you return to checkpoint 2 at the same height.
 
-## 6. Finish, timing, and restart
+## 8. Finish, timing, grading, and restart
 
 - Pass through the finish gate.
 - Confirm the correct seed and finish time are reported.
-- Restart outside VR and confirm the timer and checkpoints reset while the map stays the same.
+- Confirm the run grade matches the number of falls.
+- Confirm **FULL CLEAR** appears only after collecting all three shards.
+- Restart outside VR and confirm the timer, checkpoints, fall count, shard count, and shard visibility reset while the map stays the same.
 - Complete the same seed twice and confirm its faster local best time is retained.
-- Load another seed and confirm it has a separate best time.
+- Load another seed and confirm it has separate time and clean-run records.
 
-## 7. Seed stress test
+## 9. Seed stress test
 
 Test at least five seeds:
 
@@ -63,9 +86,9 @@ Test at least five seeds:
 - `HEIGHT01`
 - one random seed generated by the page
 
-For each seed, record whether every jump is reachable, the spring is reliable, and the checksum remains stable after reopening the link.
+For each seed, record whether every jump is reachable, all three shards are reachable, the spring is reliable, and the checksum and shard positions remain stable after reopening the link.
 
-## 8. Solo multiplayer diagnostic
+## 10. Solo multiplayer diagnostic
 
 - Stay outside VR and disconnect from any room.
 - Press **Run Solo Network Test**.
@@ -73,17 +96,17 @@ For each seed, record whether every jump is reachable, the spring is reliable, a
 - Run it twice and confirm no duplicate test avatar remains.
 - Confirm a failed network test does not prevent solo calibration or generated play.
 
-## 9. Multiplayer generated map — when another tester is available
+## 11. Multiplayer generated map — when another tester is available
 
 - On device A, load a generated seed and copy the exact course link.
 - Open that exact link on device B before creating or joining a room.
-- Confirm both devices show the same seed and map checksum.
+- Confirm both devices show the same seed, map checksum, and shard positions.
 - Create and join the multiplayer room.
 - Enter VR on both devices.
 - Confirm remote avatars align with the same platforms throughout the route.
-- Remember that checkpoints, spring events, timers, completion, and restart are still local in this phase.
+- Remember that checkpoints, shard collection, spring events, timers, completion, and restart are still local in this phase.
 
-## 10. Disconnect and recovery — when another tester is available
+## 12. Disconnect and recovery — when another tester is available
 
 - Interrupt one guest’s Wi-Fi briefly and confirm the other player is not immediately removed from their own course.
 - Restore Wi-Fi and rejoin if required.
@@ -95,7 +118,9 @@ For each seed, record whether every jump is reachable, the spring is reliable, a
 - Quest model and Meta Quest Browser version.
 - Course mode.
 - Exact seed and map checksum.
-- Module or platform where the problem occurred.
+- Camera too high, too low, or comfortable.
+- Whether idle sliding occurred while both hands were still.
+- Shard number and platform where the problem occurred.
 - Current checkpoint number.
 - One-hand or two-hand push.
 - Whether the player was rising, falling, or standing.
