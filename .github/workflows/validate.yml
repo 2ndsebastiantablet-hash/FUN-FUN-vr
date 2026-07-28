@@ -27,6 +27,7 @@ jobs:
           node --check generated-course.js
           node --check comfort-fixes.js
           node --check run-progression.js
+          node --check collectibles.js
           node --check multiplayer.js
           node --check multiplayer-hardening.js
       - name: Validate 2,000 generated seeds
@@ -35,6 +36,8 @@ jobs:
         run: node tests/generated-bootstrap.test.mjs
       - name: Validate comfort and progression
         run: node tests/comfort-progression.test.mjs
+      - name: Validate collectible placement
+        run: node tests/collectibles.test.mjs
       - name: Parse static HTML entries
         run: |
           python - <<'PY'
