@@ -110,6 +110,21 @@ export const PLATFORMER_ASSETS = [
     galleryScale: 0.8,
     phase: "phase-3-structure",
     status: "quest-test-pending"
+  },
+  {
+    id: "pipe-straight-blue",
+    label: "KayKit Straight Pipe Blue",
+    source: "Assets/gltf/blue/pipe_straight_A_blue.gltf",
+    url: `${MIRROR_BASE}/blue/pipe_straight_A_blue.gltf`,
+    category: "structure",
+    role: "pipe-tunnel",
+    color: "blue",
+    bounds: { min: [-1, 0, -1], max: [1, 2, 1], size: [2, 2, 2] },
+    collisionProfile: "paired-pipe",
+    tags: ["pipe", "tunnel", "collision-twin", "structural"],
+    galleryScale: 1,
+    phase: "phase-3-structure",
+    status: "quest-test-pending"
   }
 ];
 
