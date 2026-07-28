@@ -13,8 +13,8 @@
     onerror="window.__LOCOMOTION_LOAD_FAILED__ = true;"
   ></script>
   <script type="module" src="./comfort-fixes.js"></script>
-  <script type="module" src="./hazard-contact-adjust.js?build=20260728-hazard-batch-v1"></script>
-  <script type="module" src="./hazard-lab.js?build=20260728-hazard-batch-v1"></script>
+  <script type="module" src="./hazard-retune-v2.js?build=20260728-hazard-retune-v2"></script>
+  <script type="module" src="./hazard-lab.js?build=20260728-hazard-retune-v2"></script>
 
   <style>
     html, body { width: 100%; height: 100%; }
@@ -45,20 +45,20 @@
   </style>
 </head>
 <body>
-  <div id="note" data-state="checking">Building the four-system hazard batch laboratory…</div>
+  <div id="note" data-state="checking">Building the retuned four-system hazard laboratory…</div>
 
   <section id="lab-ui" aria-label="Hazard batch laboratory controls">
     <h1>Hazard Batch Lab</h1>
-    <p>Test damage contact, explosive launch force, a collapsing bridge chain, and respawn feedback in one route.</p>
+    <p>Retest the smaller spike contact area, true bomb proximity arming, collapsing bridge, and non-blocking respawn feedback.</p>
     <div id="course-status" role="status" data-state="checking">Preparing mechanics batch…</div>
     <div id="course-details">Checkpoint 0/3 • Resets 0 • Explosions 0 • Bridge chains 0</div>
     <div class="lab-row">
       <button id="restart-course" type="button">Restart Lab</button>
-      <a class="secondary" href="./labs.html?build=20260728-hazard-batch-v1">All Mechanics Labs</a>
-      <a class="secondary" href="./interaction-lab.html?build=20260728-lever-input-v2">Button &amp; Lever Lab</a>
+      <a class="secondary" href="./labs.html?build=20260728-hazard-retune-v2">All Mechanics Labs</a>
+      <a class="secondary" href="./structure-lab.html?build=20260728-structure-push-v1">Push &amp; Structure Lab</a>
       <a class="secondary" href="./">Return to Game</a>
     </div>
-    <div class="hint">The red strip resets instantly. The bomb shows an orange fuse ring before launching you. The bridge collapses as a chain. Every reset should produce a clear headset flash.</div>
+    <div class="hint">Only the visible spike row should reset you. The faint outer bomb ring is its detection radius. The bridge now uses in-world yellow warnings without covering the headset view.</div>
   </section>
 
   <noscript>This WebXR mechanics lab requires JavaScript.</noscript>
@@ -77,7 +77,7 @@
 
     <a-entity id="player-rig" position="0 0.12 8" gorilla-locomotion="leftHand: #left-hand; rightHand: #right-hand; head: #player-camera; floorHeight: -20; playerHeightOffset: 0.88; bodyRadius: 0.32; bodyHeight: 1.20">
       <a-camera id="player-camera" position="0 1.6 0" wasd-controls-enabled="false">
-        <a-plane id="respawn-flash" position="0 0 -0.24" width="1.1" height="0.75" visible="false" respawn-flash="duration: 520" material="color: #FFFFFF; opacity: 0; transparent: true; shader: flat; depthTest: false"></a-plane>
+        <a-plane id="respawn-flash" position="0 0 -0.24" width="1.1" height="0.75" visible="false" respawn-flash-v2="duration: 340" material="color: #FFFFFF; opacity: 0; transparent: true; shader: flat; depthTest: false"></a-plane>
       </a-camera>
       <a-entity id="left-hand" position="-0.35 -0.35 -0.4" tracked-controls="hand: left"><a-sphere id="left-hand-visual" radius="0.12" color="#FF7AA2" opacity="0.95"></a-sphere></a-entity>
       <a-entity id="right-hand" position="0.35 -0.35 -0.4" tracked-controls="hand: right"><a-sphere id="right-hand-visual" radius="0.12" color="#6FC3FF" opacity="0.95"></a-sphere></a-entity>
@@ -89,7 +89,7 @@
     <a-plane position="-4.15 3.2 8" rotation="0 90 0" width="7" height="2.35" color="#FFFFFF">
       <a-text value="FUN-FUN VR — HAZARD BATCH LAB" position="0 0.7 0.01" color="#0F172A" width="6.2" align="center"></a-text>
       <a-text id="world-status" value="Lab pieces are loading" position="0 0.08 0.01" color="#334155" width="5.6" align="center"></a-text>
-      <a-text value="Damage • Bomb • Collapsing Bridge • Respawn Feedback" position="0 -0.58 0.01" color="#475569" width="5.8" align="center"></a-text>
+      <a-text value="Smaller Spikes • Proximity Bomb • Bridge • Clear Respawns" position="0 -0.58 0.01" color="#475569" width="5.8" align="center"></a-text>
     </a-plane>
   </a-scene>
 </body>
