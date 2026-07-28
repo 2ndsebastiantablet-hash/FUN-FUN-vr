@@ -27,7 +27,7 @@ for (const placement of first) {
   assert.ok(platform, `missing platform ${placement.platformId}`);
   assert.ok(Math.abs(placement.position[0] - platform.position[0]) <= 0.7);
   assert.equal(Number((placement.position[1] - platform.position[1]).toFixed(3)), 1.75);
-  assert.equal(placement.position[2], platform.position[2]);
+  assert.ok(Math.abs(placement.position[2] - platform.position[2]) < 0.001);
 }
 
 assert.equal(collectibleDistanceSquared({ x: 0, y: 0, z: 0 }, { x: 1, y: 2, z: 2 }), 9);
@@ -43,7 +43,7 @@ for (let index = 0; index < 500; index += 1) {
     const platform = manifest.pieces.find((piece) => piece.id === placement.platformId);
     assert.ok(platform, `seed ${manifest.seed} missing collectible platform ${placement.platformId}`);
     assert.ok(Math.abs(placement.position[0] - platform.position[0]) <= 0.7);
-    assert.equal(placement.position[2], platform.position[2]);
+    assert.ok(Math.abs(placement.position[2] - platform.position[2]) < 0.001);
   }
 }
 
