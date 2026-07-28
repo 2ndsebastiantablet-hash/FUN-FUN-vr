@@ -90,7 +90,6 @@ function registerBrowserComponents() {
         this.local = { left: new THREE.Vector3(), right: new THREE.Vector3() };
         this.havePrevious = { left: false, right: false };
         this.lastImpulse = { left: -Infinity, right: -Infinity };
-        this.lastTime = 0;
         this.bodyReady = false;
         this.onBodyLoaded = () => {
           this.bodyReady = Boolean(this.el.body);
@@ -143,9 +142,13 @@ function registerBrowserComponents() {
           maximumImpulse: this.data.maximumImpulse
         });
         const impulseVector = new CANNON.Vec3(impulse.x, impulse.y, impulse.z);
-        const contactPoint = new CANNON.Vec3(this.current[key].x, this.current[key].y, this.current[key].z);
+        const relativeContactPoint = new CANNON.Vec3(
+          this.current[key].x - body.position.x,
+          this.current[key].y - body.position.y,
+          this.current[key].z - body.position.z
+        );
         body.wakeUp();
-        body.applyImpulse(impulseVector, contactPoint);
+        body.applyImpulse(impulseVector, relativeContactPoint);
         this.lastImpulse[key] = time;
         window.dispatchEvent(new CustomEvent("pushable-contact", {
           detail: {
