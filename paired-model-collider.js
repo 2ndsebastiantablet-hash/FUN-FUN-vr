@@ -47,6 +47,18 @@ export function collisionTwinParts(profile, bounds = { center: { x: 0, y: 0, z: 
     ];
   }
 
+  if (profile === "pipe") {
+    const wall = Math.max(0.12, Math.min(width, height) * 0.18);
+    const innerWidth = Math.max(0.2, width - wall * 2);
+    const innerHeight = Math.max(0.2, height - wall * 2);
+    return [
+      { name: "left-wall", position: { x: cx - (width - wall) * 0.5, y: cy, z: cz }, size: { x: wall, y: innerHeight, z: depth } },
+      { name: "right-wall", position: { x: cx + (width - wall) * 0.5, y: cy, z: cz }, size: { x: wall, y: innerHeight, z: depth } },
+      { name: "ceiling", position: { x: cx, y: cy + (height - wall) * 0.5, z: cz }, size: { x: innerWidth, y: wall, z: depth } },
+      { name: "floor", position: { x: cx, y: cy - (height - wall) * 0.5, z: cz }, size: { x: innerWidth, y: wall, z: depth } }
+    ];
+  }
+
   return [{ name: "full", position: { x: cx, y: cy, z: cz }, size: { x: width, y: height, z: depth } }];
 }
 
@@ -56,7 +68,7 @@ function registerBrowserComponent() {
 
   AFRAME.registerComponent("paired-model-collider", {
     schema: {
-      profile: { default: "arch", oneOf: ["arch", "hoop", "box"] },
+      profile: { default: "arch", oneOf: ["arch", "hoop", "pipe", "box"] },
       idPrefix: { default: "collision-twin" },
       minimumDepth: { default: 0.18 }
     },
