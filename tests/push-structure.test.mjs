@@ -6,6 +6,7 @@ import {
   pointInsideGoal,
   steppedSlopeDefinitions
 } from "../push-structure-mechanics.js";
+import { elevatedStepHeight } from "../structure-slope-base.js";
 
 const activePush = calculateHandPushVelocity({
   handCurrent: { x: 0.2, z: 0.1 },
@@ -37,12 +38,17 @@ const steps = steppedSlopeDefinitions({ steps: 5, startZ: -23.05, stepDepth: 0.7
 assert.equal(steps.length, 5);
 assert.ok(steps.every((step, index) => step.size.y > 0 && (index === 0 || step.size.y > steps[index - 1].size.y)));
 assert.ok(steps[4].position.z < steps[0].position.z);
+assert.equal(elevatedStepHeight(0, 1, 0.24), 1.24);
+assert.equal(elevatedStepHeight(4, 1, 0.24), 2.2);
 
 const mechanic = fs.readFileSync("push-structure-mechanics.js", "utf8");
+const slopePatch = fs.readFileSync("structure-slope-base.js", "utf8");
 const source = fs.readFileSync("structure-lab.js", "utf8");
 const html = fs.readFileSync("structure-lab.html", "utf8");
 assert.match(mechanic, /deterministic-pushable/);
 assert.match(mechanic, /push-object-goal/);
+assert.match(slopePatch, /baseHeight = 1/);
+assert.match(slopePatch, /slope-step-/);
 assert.match(source, /expectedColliderCount: 40/);
 assert.match(source, /pushableCount: 2/);
 assert.match(source, /goalCount: 2/);
@@ -52,6 +58,7 @@ assert.match(source, /slope-step/);
 assert.match(source, /push-ball/);
 assert.match(source, /push-crate/);
 assert.match(html, /Push &amp; Structure Lab/);
+assert.match(html, /structure-slope-base\.js\?build=20260728-structure-push-v1/);
 assert.match(html, /structure-lab\.js\?build=20260728-structure-push-v1/);
 
-console.log("Deterministic pushing, goal detection, slope generation, and structure lab coverage tests passed.");
+console.log("Deterministic pushing, goal detection, elevated slope alignment, and structure lab coverage tests passed.");
