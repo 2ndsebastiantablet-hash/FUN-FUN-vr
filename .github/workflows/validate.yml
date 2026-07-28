@@ -36,7 +36,7 @@ jobs:
         run: node tests/hazard-pack.test.mjs
       - name: Validate retuned hazard behavior
         run: node tests/hazard-retune-v2.test.mjs
-      - name: Validate pushable and structure batch
+      - name: Validate real rigid bodies and collision twins
         run: node tests/push-structure.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
@@ -73,7 +73,9 @@ jobs:
           node --check hazard-contact-adjust.js
           node --check hazard-retune-v2.js
           node --check hazard-lab.js
-          node --check push-structure-mechanics.js
+          node --check real-physics-objects.js
+          node --check paired-model-collider.js
+          node --check physics-lane-boundaries.js
           node --check structure-slope-base.js
           node --check structure-lab.js
           node --check runtime-error-guard.js
