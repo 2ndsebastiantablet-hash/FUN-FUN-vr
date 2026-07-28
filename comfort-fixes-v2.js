@@ -9,6 +9,7 @@ const BODY_RADIUS = 0.32;
 const BODY_HEIGHT = PLAYER_HEIGHT_OFFSET + BODY_RADIUS;
 const IDLE_STOP_SPEED = 0.42;
 const GROUND_BRAKE_STRENGTH = 9.5;
+const DEPLOYMENT_BUILD = "20260728-comfort-v2";
 
 // Course manifests intentionally freeze some source data. Never mutate a source
 // spawn in place; cache a mutable comfort-adjusted clone instead.
@@ -130,7 +131,6 @@ function adjustBuiltCourse() {
   const manifest = window.funFunCourseManifest;
   const comfortSpawn = adjustedSpawnObject(manifest?.spawn);
 
-  // The slightly raised rig still needs a lower spring detection band than the original demo.
   document.querySelectorAll("[spring-launcher]").forEach((entity) => {
     const component = entity.components?.["spring-launcher"];
     if (component) component.data.height = 0.92;
@@ -154,13 +154,43 @@ function adjustEventSpawn(event) {
   const adjusted = adjustedSpawnObject(detail.spawn);
   if (adjusted === detail.spawn) return;
 
-  // Our course events use mutable detail objects, but guard this assignment so a
-  // future frozen event payload cannot cause another runtime failure.
   try {
     detail.spawn = adjusted;
   } catch (error) {
     console.warn("Could not replace an immutable course-event spawn; using source value.", error);
   }
+}
+
+function createFreshCourseUrl() {
+  const mode = document.getElementById("course-mode")?.value === "generated" ? "generated" : "calibration";
+  const seed = String(document.getElementById("course-seed")?.value || "FUNFUN01")
+    .toUpperCase()
+    .replace(/[^A-Z0-9_-]/g, "")
+    .slice(0, 18) || "FUNFUN01";
+  const current = new URL(window.location.href);
+  const directory = current.pathname.endsWith("/")
+    ? current.pathname
+    : current.pathname.slice(0, current.pathname.lastIndexOf("/") + 1);
+  current.pathname = mode === "generated" ? `${directory}generated.html` : directory;
+  current.search = "";
+  if (mode === "generated") {
+    current.searchParams.set("mode", "generated");
+    current.searchParams.set("seed", seed);
+  }
+  current.searchParams.set("build", DEPLOYMENT_BUILD);
+  current.hash = "";
+  return current.toString();
+}
+
+function installFreshCourseLoader() {
+  const button = document.getElementById("load-course");
+  if (!button || button.dataset.freshLoader === "true") return;
+  button.dataset.freshLoader = "true";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    window.location.assign(createFreshCourseUrl());
+  }, true);
 }
 
 registerComfortGrounding();
@@ -174,14 +204,13 @@ window.addEventListener("course-built", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   configureRig();
+  installFreshCourseLoader();
   window.setTimeout(adjustBuiltCourse, 0);
   window.setTimeout(adjustBuiltCourse, 200);
 });
 
 const scene = document.querySelector("a-scene");
 scene?.addEventListener("enter-vr", () => {
-  // main.js performs its normal stabilization reset at 500 ms. Reapply the
-  // tuned spawn just afterward so an older calibration height cannot return.
   window.setTimeout(() => {
     adjustBuiltCourse();
     const rig = document.getElementById("player-rig");
@@ -198,5 +227,6 @@ window.FUN_FUN_COMFORT = Object.freeze({
   bodyHeight: BODY_HEIGHT,
   rigYFromPlatformBase: COMFORT_RIG_Y_FROM_PLATFORM_BASE,
   idleStopSpeed: IDLE_STOP_SPEED,
-  groundBrakeStrength: GROUND_BRAKE_STRENGTH
+  groundBrakeStrength: GROUND_BRAKE_STRENGTH,
+  deploymentBuild: DEPLOYMENT_BUILD
 });
