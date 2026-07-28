@@ -1,64 +1,76 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
-  calculateHandPushVelocity,
-  applyPlanarFriction,
-  pointInsideGoal,
-  steppedSlopeDefinitions
-} from "../push-structure-mechanics.js";
-import { elevatedStepHeight } from "../structure-slope-base.js";
+  calculateWeightedImpulse,
+  sphereHandContact,
+  boxHandContact,
+  pointInsideGoal
+} from "../real-physics-objects.js";
+import { collisionTwinParts } from "../paired-model-collider.js";
+import { PHYSICS_LANE_BOUNDARIES } from "../physics-lane-boundaries.js";
 
-const activePush = calculateHandPushVelocity({
-  handCurrent: { x: 0.2, z: 0.1 },
-  handPrevious: { x: 0, z: 0 },
-  objectPosition: { x: 0.25, z: 0.12 },
-  interactionRadius: 0.82,
-  deltaSeconds: 0.05,
-  strength: 1,
-  maximumSpeed: 4.4
+const ballImpulse = calculateWeightedImpulse({
+  handVelocity: { x: 3, y: 0.4, z: -2 },
+  mass: 2.4,
+  impulseScale: 0.34,
+  maximumImpulse: 8.5
 });
-assert.equal(activePush.active, true);
-assert.ok(Math.hypot(activePush.x, activePush.z) <= 4.400001, "Push speed should be capped");
+assert.ok(Math.hypot(ballImpulse.x, ballImpulse.y, ballImpulse.z) > 0, "Ball should receive a real impulse");
+assert.ok(Math.hypot(ballImpulse.x, ballImpulse.y, ballImpulse.z) <= 8.500001, "Ball impulse should be capped");
 
-const distantPush = calculateHandPushVelocity({
-  handCurrent: { x: 4, z: 4 },
-  handPrevious: { x: 3.8, z: 4 },
-  objectPosition: { x: 0, z: 0 },
-  interactionRadius: 0.82,
-  deltaSeconds: 0.05
+const crateImpulse = calculateWeightedImpulse({
+  handVelocity: { x: 3, y: 0.4, z: -2 },
+  mass: 9,
+  impulseScale: 0.12,
+  maximumImpulse: 7
 });
-assert.deepEqual(distantPush, { x: 0, z: 0, active: false });
+assert.ok(Math.hypot(crateImpulse.x, crateImpulse.y, crateImpulse.z) <= 7.000001, "Heavy crate impulse should be capped");
+assert.notDeepEqual(ballImpulse, crateImpulse, "Different mass and impulse tuning must produce different object response");
 
-const slowed = applyPlanarFriction({ x: 4, z: -2 }, 4.2, 0.1);
-assert.ok(Math.abs(slowed.x) < 4 && Math.abs(slowed.z) < 2, "Friction should reduce planar velocity");
-assert.equal(pointInsideGoal({ x: 0.2, y: 1.45, z: 2.8 }, { x: 0, y: 1.45, z: 2.75 }, { x: 1.5, y: 1.7, z: 1.15 }), true);
-assert.equal(pointInsideGoal({ x: 1.2, y: 1.45, z: 2.8 }, { x: 0, y: 1.45, z: 2.75 }, { x: 1.5, y: 1.7, z: 1.15 }), false);
+assert.equal(sphereHandContact({ x: 0.5, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, 0.48, 0.13), true);
+assert.equal(sphereHandContact({ x: 1.2, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, 0.48, 0.13), false);
+assert.equal(boxHandContact({ x: 0.5, y: 0, z: 0 }, { x: 0.45, y: 0.45, z: 0.45 }, 0.13), true);
+assert.equal(boxHandContact({ x: 0.8, y: 0, z: 0 }, { x: 0.45, y: 0.45, z: 0.45 }, 0.13), false);
+assert.equal(pointInsideGoal({ x: 0.2, y: 1.05, z: 2.75 }, { x: 0, y: 1.05, z: 2.72 }, { x: 1.45, y: 1.7, z: 1.05 }), true);
+assert.equal(pointInsideGoal({ x: 1.2, y: 1.05, z: 2.75 }, { x: 0, y: 1.05, z: 2.72 }, { x: 1.45, y: 1.7, z: 1.05 }), false);
 
-const steps = steppedSlopeDefinitions({ steps: 5, startZ: -23.05, stepDepth: 0.72, risePerStep: 0.24 });
-assert.equal(steps.length, 5);
-assert.ok(steps.every((step, index) => step.size.y > 0 && (index === 0 || step.size.y > steps[index - 1].size.y)));
-assert.ok(steps[4].position.z < steps[0].position.z);
-assert.equal(elevatedStepHeight(0, 1, 0.24), 1.24);
-assert.equal(elevatedStepHeight(4, 1, 0.24), 2.2);
+const centeredBounds = { center: { x: 0, y: 2, z: -4 }, size: { x: 4, y: 4, z: 0.8 } };
+const hoopParts = collisionTwinParts("hoop", centeredBounds);
+const archParts = collisionTwinParts("arch", centeredBounds);
+const pipeParts = collisionTwinParts("pipe", { center: { x: 0, y: 2, z: -14 }, size: { x: 2.7, y: 2.7, z: 2.7 } });
+assert.equal(hoopParts.length, 4, "Hoop twin should use four surrounding solids");
+assert.equal(archParts.length, 5, "Arch twin should use pillars, shoulders, and top");
+assert.equal(pipeParts.length, 4, "Pipe twin should use floor, ceiling, and side walls");
+assert.equal(hoopParts.some((part) => part.name === "full"), false, "Hoop opening must not be filled by a full box");
+assert.equal(archParts.some((part) => part.name === "full"), false, "Arch opening must remain traversable");
+assert.equal(pipeParts.some((part) => part.name === "full"), false, "Pipe tunnel must remain hollow");
+assert.equal(PHYSICS_LANE_BOUNDARIES.length, 5, "Real bodies need five physical lane boundaries");
 
-const mechanic = fs.readFileSync("push-structure-mechanics.js", "utf8");
-const slopePatch = fs.readFileSync("structure-slope-base.js", "utf8");
+const physics = fs.readFileSync("real-physics-objects.js", "utf8");
+const twins = fs.readFileSync("paired-model-collider.js", "utf8");
 const source = fs.readFileSync("structure-lab.js", "utf8");
 const html = fs.readFileSync("structure-lab.html", "utf8");
-assert.match(mechanic, /deterministic-pushable/);
-assert.match(mechanic, /push-object-goal/);
-assert.match(slopePatch, /baseHeight = 1/);
-assert.match(slopePatch, /slope-step-/);
-assert.match(source, /expectedColliderCount: 40/);
-assert.match(source, /pushableCount: 2/);
-assert.match(source, /goalCount: 2/);
-assert.match(source, /pipe-tunnel/);
-assert.match(source, /narrow-beam/);
-assert.match(source, /slope-step/);
-assert.match(source, /push-ball/);
-assert.match(source, /push-crate/);
-assert.match(html, /Push &amp; Structure Lab/);
-assert.match(html, /structure-slope-base\.js\?build=20260728-structure-push-v1/);
-assert.match(html, /structure-lab\.js\?build=20260728-structure-push-v1/);
+const registry = fs.readFileSync("assets/platformer/registry.js", "utf8");
+assert.doesNotMatch(source, /deterministic-pushable/);
+assert.doesNotMatch(html, /push-structure-mechanics\.js/);
+assert.match(physics, /applyImpulse/);
+assert.match(physics, /angularVelocity/);
+assert.match(physics, /body\.mass/);
+assert.match(twins, /data-collision-twin-proxy/);
+assert.match(twins, /static-body/);
+assert.match(twins, /locomotion-collider/);
+assert.match(source, /mass: 2\.4/);
+assert.match(source, /mass: 9/);
+assert.match(source, /expectedPairedModels: 5/);
+assert.match(source, /expectedPairedProxies: 21/);
+assert.match(source, /expectedFinalColliders: 56/);
+assert.match(source, /data-visible-model/);
+assert.match(source, /data-collision-twin/);
+assert.match(registry, /blue\/hoop_blue\.gltf/);
+assert.match(registry, /blue\/arch_blue\.gltf/);
+assert.match(registry, /blue\/pipe_straight_A_blue\.gltf/);
+assert.match(html, /aframe-physics-system@v4\.2\.4/);
+assert.match(html, /physics="gravity: -9\.8/);
+assert.match(html, /structure-lab\.js\?build=20260729-real-physics-v2/);
 
-console.log("Deterministic pushing, goal detection, elevated slope alignment, and structure lab coverage tests passed.");
+console.log("Real weighted bodies, hand impulses, physics goals, and visible/invisible collision-twin tests passed.");
