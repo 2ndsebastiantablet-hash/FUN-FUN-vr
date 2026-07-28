@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate collectible placement
+        run: node tests/collectibles.test.mjs
       - name: Check JavaScript syntax
         run: |
           node --check main.js
@@ -36,8 +38,6 @@ jobs:
         run: node tests/generated-bootstrap.test.mjs
       - name: Validate comfort and progression
         run: node tests/comfort-progression.test.mjs
-      - name: Validate collectible placement
-        run: node tests/collectibles.test.mjs
       - name: Parse static HTML entries
         run: |
           python - <<'PY'
