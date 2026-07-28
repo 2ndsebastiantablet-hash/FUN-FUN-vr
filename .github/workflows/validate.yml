@@ -32,6 +32,7 @@ jobs:
           node --check generated-components.js
           node --check generated-course.js
           node --check comfort-fixes.js
+          node --check comfort-fixes-v2.js
           node --check run-progression.js
           node --check collectibles.js
           node --check moving-platform.js
