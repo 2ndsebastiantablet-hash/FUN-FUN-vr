@@ -20,6 +20,8 @@ jobs:
         run: node tests/collectibles.test.mjs
       - name: Validate moving platform mechanic
         run: node tests/moving-platform.test.mjs
+      - name: Validate Quest runtime error guard
+        run: node tests/runtime-error-guard.test.mjs
       - name: Check JavaScript syntax
         run: |
           node --check main.js
@@ -34,6 +36,7 @@ jobs:
           node --check collectibles.js
           node --check moving-platform.js
           node --check mechanics-lab.js
+          node --check runtime-error-guard.js
           node --check multiplayer.js
           node --check multiplayer-hardening.js
       - name: Validate 2,000 generated seeds
