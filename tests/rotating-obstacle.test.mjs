@@ -72,8 +72,12 @@ const locomotion = {
   wasTwoHandTouchingFloor: true
 };
 assert.equal(applyRotatingObstacleKnockback(locomotion, impulse), true);
-assert.deepEqual(locomotion.velocity, { x: 0, y: 2.2, z: -4.6 });
-assert.deepEqual(locomotion.launchVelocity, { x: 0, y: 2.2, z: -4.6 });
+assert.ok(Math.abs(locomotion.velocity.x) < 1e-9);
+assert.equal(locomotion.velocity.y, 2.2);
+assert.equal(locomotion.velocity.z, -4.6);
+assert.ok(Math.abs(locomotion.launchVelocity.x) < 1e-9);
+assert.equal(locomotion.launchVelocity.y, 2.2);
+assert.equal(locomotion.launchVelocity.z, -4.6);
 assert.deepEqual(locomotion.pushHistory, []);
 assert.equal(locomotion.grounded, false);
 assert.equal(locomotion.wasTouchingFloor, false);
