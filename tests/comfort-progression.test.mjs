@@ -76,8 +76,9 @@ function customEventClass() {
   });
 
   assert.ok(AFRAME.components["comfort-grounding"], "comfort-grounding component should register");
-  assert.equal(window.FUN_FUN_COMFORT.playerHeightOffset, 0.98);
-  assert.equal(window.FUN_FUN_COMFORT.rigYFromPlatformBase, 0.02);
+  assert.equal(window.FUN_FUN_COMFORT.playerHeightOffset, 0.88);
+  assert.equal(window.FUN_FUN_COMFORT.rigYFromPlatformBase, 0.12);
+  assert.equal(window.FUN_FUN_COMFORT.bodyHeight, 1.2);
 
   const collider = {
     components: {
@@ -90,8 +91,8 @@ function customEventClass() {
     }
   };
   const locomotion = {
-    rig: { position: new Vector3(0, 0.02, 0) },
-    data: { bodyHeight: 1.3, bodyRadius: 0.32 },
+    rig: { position: new Vector3(0, 0.12, 0) },
+    data: { bodyHeight: 1.2, bodyRadius: 0.32 },
     colliders: [collider],
     velocity: new Vector3(0.2, 0, 0.1),
     launchVelocity: new Vector3(0.2, 0, 0.1),
@@ -152,17 +153,24 @@ function customEventClass() {
 
   let gradeDetail = null;
   window.addEventListener("run-grade", (event) => { gradeDetail = event.detail; });
+  window.dispatchEvent(new CustomEvent("collectibles-ready", { detail: { total: 3, collected: 0 } }));
   window.dispatchEvent(new CustomEvent("course-started"));
   window.dispatchEvent(new CustomEvent("playtest-reset", { detail: { message: "Fall reset — returned to checkpoint" } }));
   window.dispatchEvent(new CustomEvent("playtest-reset", { detail: { message: "Fall reset — returned to checkpoint" } }));
   window.dispatchEvent(new CustomEvent("course-checkpoint", { detail: { index: 1 } }));
   window.dispatchEvent(new CustomEvent("spring-launched"));
+  window.dispatchEvent(new CustomEvent("collectible-collected", { detail: { total: 3, collected: 1 } }));
+  window.dispatchEvent(new CustomEvent("collectible-collected", { detail: { total: 3, collected: 2 } }));
+  window.dispatchEvent(new CustomEvent("collectible-collected", { detail: { total: 3, collected: 3 } }));
   window.dispatchEvent(new CustomEvent("course-finish"));
 
   assert.equal(gradeDetail.grade, "B");
   assert.equal(gradeDetail.falls, 2);
   assert.equal(gradeDetail.springLaunches, 1);
+  assert.equal(gradeDetail.collectibles, 3);
+  assert.equal(gradeDetail.collectibleTotal, 3);
+  assert.equal(gradeDetail.fullClear, true);
   assert.equal(gradeDetail.newBest, true);
 }
 
-console.log("Comfort grounding and run progression tests passed.");
+console.log("Comfort grounding, run progression, and full-clear tests passed.");
