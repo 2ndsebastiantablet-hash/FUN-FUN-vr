@@ -38,7 +38,7 @@ export function applyRotatingOverdrive(documentLike = globalThis.document) {
   let changed = 0;
 
   documentLike.querySelectorAll("[rotating-obstacle]").forEach((rotator) => {
-    // Reapply on every call so a cached previous overdrive value cannot survive.
+    if (rotator.dataset?.rotatingOverdrive === "retuned-v2") return;
     if (rotator.dataset) rotator.dataset.rotatingOverdrive = "retuned-v2";
 
     if (rotator.object3D?.position) rotator.object3D.position.y = ROTATING_OVERDRIVE.centerY;
