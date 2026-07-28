@@ -1,12 +1,13 @@
-// Physical Quest tuning requested after the rotating-obstacle lab passed its first test.
-// This layer intentionally turns the original waist-high sweepers into giant wall-blades
-// and raises their knockback to an exaggerated map-ejection launch.
+// Physical Quest retuning for the rotating-obstacle lab.
+// The original 12 m x 10 m wall-blades overlapped neighboring arenas. This
+// version keeps them impossible to jump over or bypass on a 4 m platform while
+// fitting cleanly inside the lab spacing. Extreme knockback remains intentional.
 
 export const ROTATING_OVERDRIVE = Object.freeze({
-  barLength: 12,
-  barWidth: 0.72,
-  barHeight: 10,
-  centerY: 5,
+  barLength: 6.2,
+  barWidth: 0.58,
+  barHeight: 5.6,
+  centerY: 2.8,
   knockbackSpeed: 26,
   upwardSpeed: 10,
   hitCooldown: 1400
@@ -22,12 +23,12 @@ function setComponentValue(entity, property, value) {
 function replaceLegacyInstructions(documentLike) {
   documentLike.querySelectorAll?.("a-text").forEach((text) => {
     const value = String(text.getAttribute?.("value") || "");
-    if (value.includes("JUMP OR TIME THE SLOW SWEEPER")) {
-      text.setAttribute("value", "1. TIME THE GIANT WALL — YOU CANNOT JUMP IT");
-    } else if (value.includes("CROSS THE TWIN SPINNER")) {
+    if (value.includes("JUMP OR TIME THE SLOW SWEEPER") || value.includes("TIME THE GIANT WALL")) {
+      text.setAttribute("value", "1. TIME THE WALL — TOO TALL TO JUMP");
+    } else if (value.includes("CROSS THE TWIN SPINNER") || value.includes("TWIN-WALL OPENING")) {
       text.setAttribute("value", "2. WAIT FOR THE TWIN-WALL OPENING");
-    } else if (value.includes("WATCH THE REVERSE SWEEPER")) {
-      text.setAttribute("value", "3. TIME THE REVERSE GIANT WALL");
+    } else if (value.includes("WATCH THE REVERSE SWEEPER") || value.includes("REVERSE GIANT WALL")) {
+      text.setAttribute("value", "3. TIME THE REVERSE WALL");
     }
   });
 }
@@ -37,8 +38,8 @@ export function applyRotatingOverdrive(documentLike = globalThis.document) {
   let changed = 0;
 
   documentLike.querySelectorAll("[rotating-obstacle]").forEach((rotator) => {
-    if (rotator.dataset?.rotatingOverdrive === "true") return;
-    if (rotator.dataset) rotator.dataset.rotatingOverdrive = "true";
+    // Reapply on every call so a cached previous overdrive value cannot survive.
+    if (rotator.dataset) rotator.dataset.rotatingOverdrive = "retuned-v2";
 
     if (rotator.object3D?.position) rotator.object3D.position.y = ROTATING_OVERDRIVE.centerY;
     else rotator.setAttribute?.("position", `0 ${ROTATING_OVERDRIVE.centerY} 0`);
@@ -59,27 +60,33 @@ export function applyRotatingOverdrive(documentLike = globalThis.document) {
 
     const post = rotator.querySelector?.("a-cylinder");
     if (post) {
-      post.setAttribute("position", "0 -4.15 0");
-      post.setAttribute("height", "8.3");
-      post.setAttribute("radius", "0.32");
+      post.setAttribute("position", "0 -1.95 0");
+      post.setAttribute("height", "3.9");
+      post.setAttribute("radius", "0.3");
     }
 
     const ring = rotator.querySelector?.("a-ring");
     if (ring) {
-      ring.setAttribute("position", "0 -4.97 0");
-      ring.setAttribute("radius-inner", "1.05");
-      ring.setAttribute("radius-outer", "1.28");
+      ring.setAttribute("position", "0 -2.77 0");
+      ring.setAttribute("radius-inner", "0.9");
+      ring.setAttribute("radius-outer", "1.1");
     }
 
-    const warning = documentLike.createElement?.("a-text");
+    let warning = rotator.querySelector?.("[data-overdrive-warning]");
+    if (!warning) {
+      warning = documentLike.createElement?.("a-text");
+      if (warning) {
+        warning.setAttribute("data-overdrive-warning", "true");
+        warning.setAttribute("align", "center");
+        warning.setAttribute("width", "5.2");
+        warning.setAttribute("color", "#FFFFFF");
+        warning.setAttribute("side", "double");
+        rotator.appendChild(warning);
+      }
+    }
     if (warning) {
-      warning.setAttribute("value", "GIANT WALL — CONTACT EJECTS YOU");
-      warning.setAttribute("position", "0 -3.55 0.55");
-      warning.setAttribute("align", "center");
-      warning.setAttribute("width", "5.5");
-      warning.setAttribute("color", "#FFFFFF");
-      warning.setAttribute("side", "double");
-      rotator.appendChild(warning);
+      warning.setAttribute("value", "ROTATING WALL — CONTACT EJECTS YOU");
+      warning.setAttribute("position", "0 -1.65 0.42");
     }
 
     rotator.object3D?.updateMatrixWorld?.(true);
