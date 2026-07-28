@@ -2,9 +2,9 @@
 // This file does not replace the source movement system or its collision solver.
 
 const ORIGINAL_RIG_Y_FROM_PLATFORM_BASE = 0.32;
-const COMFORT_RIG_Y_FROM_PLATFORM_BASE = 0.02;
+const COMFORT_RIG_Y_FROM_PLATFORM_BASE = 0.12;
 const SPAWN_Y_ADJUSTMENT = COMFORT_RIG_Y_FROM_PLATFORM_BASE - ORIGINAL_RIG_Y_FROM_PLATFORM_BASE;
-const PLAYER_HEIGHT_OFFSET = 0.98;
+const PLAYER_HEIGHT_OFFSET = 0.88;
 const BODY_RADIUS = 0.32;
 const BODY_HEIGHT = PLAYER_HEIGHT_OFFSET + BODY_RADIUS;
 const IDLE_STOP_SPEED = 0.42;
@@ -130,10 +130,10 @@ function adjustBuiltCourse() {
     if (component?.data?.spawn) adjustSpawnObject(component.data.spawn);
   });
 
-  // The lower rig needs the spring's standing detection band lowered slightly.
+  // The slightly raised rig still needs a lower spring detection band than the original demo.
   document.querySelectorAll("[spring-launcher]").forEach((entity) => {
     const component = entity.components?.["spring-launcher"];
-    if (component) component.data.height = 0.88;
+    if (component) component.data.height = 0.92;
   });
 
   configureRig();
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const scene = document.querySelector("a-scene");
 scene?.addEventListener("enter-vr", () => {
   // main.js performs its normal stabilization reset at 500 ms. Reapply the
-  // comfort spawn just afterward so the old calibration height cannot return.
+  // tuned spawn just afterward so an older calibration height cannot return.
   window.setTimeout(() => {
     adjustBuiltCourse();
     const rig = document.getElementById("player-rig");
