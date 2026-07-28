@@ -14,6 +14,7 @@
   ></script>
   <script type="module" src="./comfort-fixes.js"></script>
   <script type="module" src="./rotating-lab.js"></script>
+  <script type="module" src="./rotating-overdrive.js"></script>
 
   <style>
     html, body { width: 100%; height: 100%; }
@@ -70,19 +71,20 @@
   </style>
 </head>
 <body>
-  <div id="note" data-state="checking">Building the rotating-obstacle mechanics laboratory…</div>
+  <div id="note" data-state="checking">Building the giant rotating-wall laboratory…</div>
 
   <section id="lab-ui" aria-label="Rotating obstacle laboratory controls">
-    <h1>Rotating Obstacle Lab</h1>
-    <p>Test a slow sweeper, twin spinner, and reverse sweeper before rotating hazards enter generated courses.</p>
+    <h1>Giant Rotating Wall Lab</h1>
+    <p>Test three floor-to-ceiling rotating walls with intentionally extreme map-ejection knockback.</p>
     <div id="course-status" role="status" data-state="checking">Preparing mechanics lab…</div>
-    <div id="course-details">Checkpoint 0/2 • Hits 0 • 3 rotating obstacles</div>
+    <div id="course-details">Checkpoint 0/2 • Hits 0 • 3 giant rotating walls</div>
     <div class="lab-row">
       <button id="restart-course" type="button">Restart Lab</button>
+      <a class="secondary" href="./falling-lab.html">Falling Platform Lab</a>
       <a class="secondary" href="./mechanics-lab.html">Moving Platform Lab</a>
       <a class="secondary" href="./">Return to Game</a>
     </div>
-    <div class="hint">Orange bars knock the player in their direction of travel. Jump, wait for an opening, or recover after contact. Falls return to the latest checkpoint.</div>
+    <div class="hint">These walls are deliberately too tall to jump and too long to go around. Contact should launch you completely out of the arena before the checkpoint reset catches you.</div>
   </section>
 
   <noscript>This WebXR mechanics lab requires JavaScript.</noscript>
@@ -109,9 +111,9 @@
     <a-entity id="course-root"></a-entity>
 
     <a-plane position="-4.15 3.2 8" rotation="0 90 0" width="6.4" height="2.2" color="#FFFFFF">
-      <a-text value="FUN-FUN VR — ROTATING OBSTACLE LAB" position="0 0.65 0.01" color="#0F172A" width="5.8" align="center"></a-text>
+      <a-text value="FUN-FUN VR — GIANT ROTATING WALL LAB" position="0 0.65 0.01" color="#0F172A" width="5.8" align="center"></a-text>
       <a-text id="world-status" value="Lab pieces are loading" position="0 0.05 0.01" color="#334155" width="5.2" align="center"></a-text>
-      <a-text value="Cross three orange sweepers. Falls return to the latest checkpoint." position="0 -0.57 0.01" color="#475569" width="5.2" align="center"></a-text>
+      <a-text value="Time each giant wall. Contact ejects you from the arena." position="0 -0.57 0.01" color="#475569" width="5.2" align="center"></a-text>
     </a-plane>
   </a-scene>
 </body>
