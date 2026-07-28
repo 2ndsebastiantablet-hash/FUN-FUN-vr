@@ -19,6 +19,19 @@ function setComponentValue(entity, property, value) {
   if (component?.data) component.data[property] = value;
 }
 
+function replaceLegacyInstructions(documentLike) {
+  documentLike.querySelectorAll?.("a-text").forEach((text) => {
+    const value = String(text.getAttribute?.("value") || "");
+    if (value.includes("JUMP OR TIME THE SLOW SWEEPER")) {
+      text.setAttribute("value", "1. TIME THE GIANT WALL — YOU CANNOT JUMP IT");
+    } else if (value.includes("CROSS THE TWIN SPINNER")) {
+      text.setAttribute("value", "2. WAIT FOR THE TWIN-WALL OPENING");
+    } else if (value.includes("WATCH THE REVERSE SWEEPER")) {
+      text.setAttribute("value", "3. TIME THE REVERSE GIANT WALL");
+    }
+  });
+}
+
 export function applyRotatingOverdrive(documentLike = globalThis.document) {
   if (!documentLike?.querySelectorAll) return 0;
   let changed = 0;
@@ -72,6 +85,8 @@ export function applyRotatingOverdrive(documentLike = globalThis.document) {
     rotator.object3D?.updateMatrixWorld?.(true);
     changed += 1;
   });
+
+  replaceLegacyInstructions(documentLike);
 
   if (changed && typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("rotating-overdrive-ready", {
