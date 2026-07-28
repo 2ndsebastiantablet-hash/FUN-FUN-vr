@@ -14,6 +14,7 @@
   ></script>
   <script type="module" src="./comfort-fixes.js"></script>
   <script type="module" src="./mechanics-lab.js"></script>
+  <script type="module" src="./lab-collision-tuning.js"></script>
 
   <style>
     html, body { width: 100%; height: 100%; }
@@ -79,10 +80,11 @@
     <div id="course-details">Checkpoint 0/2 • 3 moving platforms</div>
     <div class="lab-row">
       <button id="restart-course" type="button">Restart Lab</button>
+      <a class="secondary" href="./rotating-lab.html">Rotating Obstacle Lab</a>
       <a class="secondary" href="./">Return to Game</a>
       <a class="secondary" href="./asset-gallery.html">Asset Gallery</a>
     </div>
-    <div class="hint">Yellow rings identify moving surfaces. The platform should carry you while standing still but should never cancel a deliberate hand launch.</div>
+    <div class="hint">Yellow rings identify moving surfaces. The platform should carry you while standing still but should never cancel a deliberate hand launch. Collision edges are now trimmed slightly to match the beveled models.</div>
   </section>
 
   <noscript>This WebXR mechanics lab requires JavaScript.</noscript>
