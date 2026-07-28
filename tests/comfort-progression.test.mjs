@@ -58,16 +58,19 @@ function customEventClass() {
     querySelectorAll() { return []; }
   };
   const window = { ...windowTarget, AFRAME };
+  const CustomEvent = customEventClass();
   const context = vm.createContext({
     window,
     document,
     AFRAME,
     THREE: { Vector3 },
-    CustomEvent: customEventClass(),
+    CustomEvent,
     Math,
     Number,
     Object,
+    WeakMap,
     WeakSet,
+    console,
     setTimeout() { return 1; }
   });
 
@@ -79,6 +82,16 @@ function customEventClass() {
   assert.equal(window.FUN_FUN_COMFORT.playerHeightOffset, 0.88);
   assert.equal(window.FUN_FUN_COMFORT.rigYFromPlatformBase, 0.12);
   assert.equal(window.FUN_FUN_COMFORT.bodyHeight, 1.2);
+
+  const frozenSpawn = Object.freeze({ x: 0, y: 0.32, z: 8 });
+  const resetEvent = new CustomEvent("course-request-reset", {
+    detail: { spawn: frozenSpawn }
+  });
+  window.dispatchEvent(resetEvent);
+  assert.equal(frozenSpawn.y, 0.32, "source frozen spawn must remain unchanged");
+  assert.notEqual(resetEvent.detail.spawn, frozenSpawn, "event should receive a mutable adjusted clone");
+  assert.equal(resetEvent.detail.spawn.y, 0.12, "adjusted clone should use tuned rig height");
+  assert.equal(Object.isFrozen(resetEvent.detail.spawn), false, "adjusted spawn clone should remain mutable");
 
   const collider = {
     components: {
@@ -173,4 +186,4 @@ function customEventClass() {
   assert.equal(gradeDetail.newBest, true);
 }
 
-console.log("Comfort grounding, run progression, and full-clear tests passed.");
+console.log("Comfort grounding, frozen-spawn handling, run progression, and full-clear tests passed.");
