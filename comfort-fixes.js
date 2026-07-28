@@ -9,8 +9,11 @@ const BODY_RADIUS = 0.32;
 const BODY_HEIGHT = PLAYER_HEIGHT_OFFSET + BODY_RADIUS;
 const IDLE_STOP_SPEED = 0.42;
 const GROUND_BRAKE_STRENGTH = 9.5;
-const adjustedSpawns = new WeakSet();
-const adjustedManifests = new WeakSet();
+
+// Course manifests intentionally freeze some source data. Never mutate a source
+// spawn in place; cache a mutable comfort-adjusted clone instead.
+const adjustedSpawnCache = new WeakMap();
+const adjustedSpawnClones = new WeakSet();
 
 function colliderBounds(colliderEl, center, min, max) {
   const component = colliderEl?.components?.["locomotion-collider"];
@@ -84,18 +87,26 @@ function registerComfortGrounding() {
   });
 }
 
-function adjustSpawnObject(spawn) {
-  if (!spawn || typeof spawn !== "object" || adjustedSpawns.has(spawn)) return spawn;
-  if (Number.isFinite(Number(spawn.y))) spawn.y = Number(spawn.y) + SPAWN_Y_ADJUSTMENT;
-  adjustedSpawns.add(spawn);
-  return spawn;
-}
+function adjustedSpawnObject(spawn) {
+  if (!spawn || typeof spawn !== "object") return spawn;
+  if (adjustedSpawnClones.has(spawn)) return spawn;
 
-function adjustSpawnArray(spawn) {
-  if (!Array.isArray(spawn) || adjustedSpawns.has(spawn)) return spawn;
-  if (Number.isFinite(Number(spawn[1]))) spawn[1] = Number(spawn[1]) + SPAWN_Y_ADJUSTMENT;
-  adjustedSpawns.add(spawn);
-  return spawn;
+  const cached = adjustedSpawnCache.get(spawn);
+  if (cached) return cached;
+
+  const y = Number(spawn.y);
+  if (!Number.isFinite(y)) return spawn;
+
+  const clone = {
+    ...spawn,
+    x: Number(spawn.x),
+    y: y + SPAWN_Y_ADJUSTMENT,
+    z: Number(spawn.z)
+  };
+
+  adjustedSpawnCache.set(spawn, clone);
+  adjustedSpawnClones.add(clone);
+  return clone;
 }
 
 function configureRig() {
@@ -117,18 +128,7 @@ function configureRig() {
 
 function adjustBuiltCourse() {
   const manifest = window.funFunCourseManifest;
-  if (manifest && !adjustedManifests.has(manifest)) {
-    adjustSpawnObject(manifest.spawn);
-    for (const piece of manifest.pieces || []) {
-      if (piece.checkpoint?.spawn) adjustSpawnArray(piece.checkpoint.spawn);
-    }
-    adjustedManifests.add(manifest);
-  }
-
-  document.querySelectorAll("[course-checkpoint-trigger]").forEach((entity) => {
-    const component = entity.components?.["course-checkpoint-trigger"];
-    if (component?.data?.spawn) adjustSpawnObject(component.data.spawn);
-  });
+  const comfortSpawn = adjustedSpawnObject(manifest?.spawn);
 
   // The slightly raised rig still needs a lower spring detection band than the original demo.
   document.querySelectorAll("[spring-launcher]").forEach((entity) => {
@@ -139,16 +139,28 @@ function adjustBuiltCourse() {
   configureRig();
 
   const rig = document.getElementById("player-rig");
-  if (rig && manifest?.spawn) {
-    rig.object3D.position.set(manifest.spawn.x, manifest.spawn.y, manifest.spawn.z);
+  if (rig && comfortSpawn) {
+    rig.object3D.position.set(comfortSpawn.x, comfortSpawn.y, comfortSpawn.z);
   }
 
   const safety = rig?.components?.["playtest-safety"];
-  if (safety?.setSpawn && manifest?.spawn) safety.setSpawn(manifest.spawn);
+  if (safety?.setSpawn && comfortSpawn) safety.setSpawn(comfortSpawn);
 }
 
 function adjustEventSpawn(event) {
-  if (event?.detail?.spawn) adjustSpawnObject(event.detail.spawn);
+  const detail = event?.detail;
+  if (!detail?.spawn) return;
+
+  const adjusted = adjustedSpawnObject(detail.spawn);
+  if (adjusted === detail.spawn) return;
+
+  // Our course events use mutable detail objects, but guard this assignment so a
+  // future frozen event payload cannot cause another runtime failure.
+  try {
+    detail.spawn = adjusted;
+  } catch (error) {
+    console.warn("Could not replace an immutable course-event spawn; using source value.", error);
+  }
 }
 
 registerComfortGrounding();
@@ -174,7 +186,7 @@ scene?.addEventListener("enter-vr", () => {
     adjustBuiltCourse();
     const rig = document.getElementById("player-rig");
     const safety = rig?.components?.["playtest-safety"];
-    const spawn = window.funFunCourseManifest?.spawn;
+    const spawn = adjustedSpawnObject(window.funFunCourseManifest?.spawn);
     if (spawn && safety?.setSpawn) safety.setSpawn(spawn);
     if (spawn && rig) rig.object3D.position.set(spawn.x, spawn.y, spawn.z);
     if (safety?.resetMotionOnly) safety.resetMotionOnly();
