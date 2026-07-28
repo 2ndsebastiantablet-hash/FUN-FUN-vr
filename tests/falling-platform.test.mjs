@@ -1,10 +1,26 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
+  FALLING_PLATFORM_TUNING,
+  scaledFallingTimings,
   fallingPlatformPhase,
   sampleFallOffset,
   bodySupportedByFallingBox
 } from "../falling-platform.js";
+
+assert.equal(FALLING_PLATFORM_TUNING.warningScale, 0.48);
+assert.equal(FALLING_PLATFORM_TUNING.fallScale, 0.55);
+
+const fastTimings = scaledFallingTimings({ warningDelay: 700, fallDuration: 900, resetDelay: 2200 });
+assert.equal(fastTimings.warningDelay, 336);
+assert.ok(Math.abs(fastTimings.fallDuration - 495) < 1e-9);
+assert.equal(fastTimings.resetDelay, 2200);
+assert.ok(fastTimings.warningDelay < 400, "standard fragile platform warning should now be very short");
+assert.ok(fastTimings.fallDuration < 500, "standard fragile platform should leave quickly");
+
+const finalTimings = scaledFallingTimings({ warningDelay: 420, fallDuration: 720, resetDelay: 2800 });
+assert.ok(finalTimings.warningDelay <= 202, "final fragile platform should demand an immediate reaction");
+assert.ok(finalTimings.fallDuration <= 396, "final fragile platform should drop rapidly");
 
 assert.equal(fallingPlatformPhase(0, 700, 900, 2200), "warning");
 assert.equal(fallingPlatformPhase(699, 700, 900, 2200), "warning");
@@ -47,4 +63,4 @@ assert.match(html, /falling-platform mechanics laboratory/i);
 assert.match(html, /falling-lab\.js/);
 assert.match(html, /Giant Rotating Wall Lab/);
 
-console.log("Falling-platform phases, accelerated drop, support detection, and lab structure tests passed.");
+console.log("Retuned falling-platform timing, accelerated drop, support detection, and lab structure tests passed.");
