@@ -93,7 +93,8 @@ assert.match(lab, /horizontalSpeed: 24/);
 assert.match(lab, /upwardSpeed: 12/);
 assert.equal((lab.match(/data-bridge-piece/g) || []).length >= 1, true);
 assert.match(html, /Hazard Batch Lab/);
-assert.match(html, /respawn-flash/);
-assert.match(html, /hazard-contact-adjust\.js/);
+assert.match(html, /respawn-flash-v2/);
+assert.match(html, /hazard-retune-v2\.js/);
+assert.doesNotMatch(html, /hazard-contact-adjust\.js/);
 
-console.log("Damage volume, bomb launch, bridge collapse, respawn feedback, tuning, and hazard lab structure tests passed.");
+console.log("Damage volume, bomb launch, bridge collapse, respawn feedback, legacy tuning, and retuned hazard lab structure tests passed.");
