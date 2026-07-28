@@ -13,7 +13,8 @@
     onerror="window.__LOCOMOTION_LOAD_FAILED__ = true;"
   ></script>
   <script type="module" src="./comfort-fixes.js"></script>
-  <script type="module" src="./interaction-lab.js"></script>
+  <script type="module" src="./lever-input-fix.js?build=20260728-lever-input-v2"></script>
+  <script type="module" src="./interaction-lab.js?build=20260728-lever-input-v2"></script>
 
   <style>
     html, body { width: 100%; height: 100%; }
@@ -53,11 +54,12 @@
     <div id="course-details">Checkpoint 0/2 • Switches 0/2 • Gates 2</div>
     <div class="lab-row">
       <button id="restart-course" type="button">Restart Lab</button>
+      <a class="secondary" href="./labs.html?build=20260728-lever-input-v2">All Mechanics Labs</a>
       <a class="secondary" href="./timed-lab.html">Timed Platform Lab</a>
       <a class="secondary" href="./falling-lab.html">Falling Platform Lab</a>
       <a class="secondary" href="./">Return to Game</a>
     </div>
-    <div class="hint">Stand on the purple floor button. At the lever, put either controller near the handle and press Trigger or Grip. Each switch opens its matching gate.</div>
+    <div class="hint">Stand on the purple floor button. At the lever, put either controller near the handle and press Trigger or Grip. The lever now supports A-Frame events, WebXR select/squeeze events, and direct Quest gamepad polling.</div>
   </section>
 
   <noscript>This WebXR mechanics lab requires JavaScript.</noscript>
