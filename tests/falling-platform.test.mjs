@@ -20,7 +20,7 @@ assert.ok(fastTimings.fallDuration < 500, "standard fragile platform should leav
 
 const finalTimings = scaledFallingTimings({ warningDelay: 420, fallDuration: 720, resetDelay: 2800 });
 assert.ok(finalTimings.warningDelay <= 202, "final fragile platform should demand an immediate reaction");
-assert.ok(finalTimings.fallDuration <= 396, "final fragile platform should drop rapidly");
+assert.ok(Math.abs(finalTimings.fallDuration - 396) < 1e-9, "final fragile platform should drop rapidly");
 
 assert.equal(fallingPlatformPhase(0, 700, 900, 2200), "warning");
 assert.equal(fallingPlatformPhase(699, 700, 900, 2200), "warning");
