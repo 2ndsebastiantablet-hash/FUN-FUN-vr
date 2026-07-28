@@ -17,18 +17,7 @@ jobs:
         with:
           node-version: 22
       - name: Validate collectible placement
-        run: |
-          set +e
-          node tests/collectibles.test.mjs > collectible-test.log 2>&1
-          code=$?
-          cat collectible-test.log
-          exit $code
-      - name: Upload collectible test log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: collectible-test-log
-          path: collectible-test.log
+        run: node tests/collectibles.test.mjs
       - name: Check JavaScript syntax
         run: |
           node --check main.js
