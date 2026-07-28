@@ -20,6 +20,8 @@ jobs:
         run: node tests/collectibles.test.mjs
       - name: Validate moving platform mechanic
         run: node tests/moving-platform.test.mjs
+      - name: Validate rotating obstacle mechanic
+        run: node tests/rotating-obstacle.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
       - name: Validate Quest vector readiness
@@ -40,6 +42,9 @@ jobs:
           node --check collectibles.js
           node --check moving-platform.js
           node --check mechanics-lab.js
+          node --check lab-collision-tuning.js
+          node --check rotating-obstacle.js
+          node --check rotating-lab.js
           node --check runtime-error-guard.js
           node --check multiplayer.js
           node --check multiplayer-hardening.js
@@ -56,7 +61,7 @@ jobs:
           from pathlib import Path
           class Parser(HTMLParser):
               pass
-          for name in ("index.html", "generated.html", "asset-gallery.html", "mechanics-lab.html"):
+          for name in ("index.html", "generated.html", "asset-gallery.html", "mechanics-lab.html", "rotating-lab.html"):
               parser = Parser()
               parser.feed(Path(name).read_text(encoding="utf-8"))
               print(f"Parsed {name}")
