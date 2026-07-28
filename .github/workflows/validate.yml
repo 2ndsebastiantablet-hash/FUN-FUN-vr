@@ -32,6 +32,8 @@ jobs:
         run: node tests/interaction-switch.test.mjs
       - name: Validate Quest lever input fallback
         run: node tests/lever-input-fix.test.mjs
+      - name: Validate hazard batch mechanics
+        run: node tests/hazard-pack.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
       - name: Validate Quest vector readiness
@@ -63,6 +65,9 @@ jobs:
           node --check interaction-switch.js
           node --check lever-input-fix.js
           node --check interaction-lab.js
+          node --check hazard-pack.js
+          node --check hazard-contact-adjust.js
+          node --check hazard-lab.js
           node --check runtime-error-guard.js
           node --check multiplayer.js
           node --check multiplayer-hardening.js
@@ -79,7 +84,7 @@ jobs:
           from pathlib import Path
           class Parser(HTMLParser):
               pass
-          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html"):
+          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html", "hazard-lab.html"):
               parser = Parser()
               parser.feed(Path(name).read_text(encoding="utf-8"))
               print(f"Parsed {name}")
