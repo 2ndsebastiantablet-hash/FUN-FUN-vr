@@ -74,6 +74,7 @@ jobs:
           node --check hazard-retune-v2.js
           node --check hazard-lab.js
           node --check push-structure-mechanics.js
+          node --check structure-slope-base.js
           node --check structure-lab.js
           node --check runtime-error-guard.js
           node --check multiplayer.js
