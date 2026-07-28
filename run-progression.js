@@ -1,5 +1,5 @@
-// Phase 4 run-performance layer. Tracks clean platforming without changing
-// movement, collisions, procedural geometry, or multiplayer pose sync.
+// Phase 4/5 run-performance layer. Tracks clean platforming and optional
+// shard collection without changing movement, collision, geometry, or networking.
 
 const state = {
   active: false,
@@ -7,6 +7,8 @@ const state = {
   falls: 0,
   springLaunches: 0,
   checkpoint: 0,
+  collectibles: 0,
+  collectibleTotal: 0,
   bestFalls: null
 };
 
@@ -75,6 +77,11 @@ function saveBest() {
   return false;
 }
 
+function shardText() {
+  const total = state.collectibleTotal;
+  return total > 0 ? `${state.collectibles}/${total} shards` : "shards loading";
+}
+
 function render(message = "") {
   const element = ensureStatsElement();
   if (!element) return;
@@ -87,7 +94,7 @@ function render(message = "") {
   const best = state.bestFalls === null ? "none yet" : `${state.bestFalls} fall${state.bestFalls === 1 ? "" : "s"}`;
   element.textContent =
     `Run performance: ${state.falls} fall${state.falls === 1 ? "" : "s"} • ` +
-    `checkpoint ${state.checkpoint}/2 • spring ${state.springLaunches} • best ${best}`;
+    `checkpoint ${state.checkpoint}/2 • ${shardText()} • spring ${state.springLaunches} • best ${best}`;
 }
 
 function resetRun() {
@@ -96,12 +103,26 @@ function resetRun() {
   state.falls = 0;
   state.springLaunches = 0;
   state.checkpoint = 0;
+  state.collectibles = 0;
+  state.collectibleTotal = window.funFunCollectibles?.placements?.length || state.collectibleTotal || 0;
   loadBest();
   render();
 }
 
 window.addEventListener("course-built", () => {
   loadBest();
+  render();
+});
+
+window.addEventListener("collectibles-ready", (event) => {
+  state.collectibleTotal = Math.max(0, Number(event.detail?.total) || 0);
+  state.collectibles = Math.max(0, Math.min(state.collectibleTotal, Number(event.detail?.collected) || 0));
+  render();
+});
+
+window.addEventListener("collectible-collected", (event) => {
+  state.collectibleTotal = Math.max(state.collectibleTotal, Number(event.detail?.total) || 0);
+  state.collectibles = Math.max(state.collectibles, Number(event.detail?.collected) || 0);
   render();
 });
 
@@ -112,6 +133,8 @@ window.addEventListener("course-started", () => {
     state.falls = 0;
     state.springLaunches = 0;
     state.checkpoint = 0;
+    state.collectibles = window.funFunCollectibles?.collected?.size || 0;
+    state.collectibleTotal = window.funFunCollectibles?.placements?.length || state.collectibleTotal;
   }
   render();
 });
@@ -142,9 +165,10 @@ window.addEventListener("course-finish", () => {
   state.active = false;
   const result = gradeForFalls(state.falls);
   const newBest = saveBest();
+  const fullClear = state.collectibleTotal > 0 && state.collectibles >= state.collectibleTotal;
   render(
     `RUN GRADE ${result.grade} — ${result.label} • ${state.falls} fall${state.falls === 1 ? "" : "s"}` +
-    `${newBest ? " • new clean-run best" : ""}`
+    ` • ${shardText()}${fullClear ? " • FULL CLEAR" : ""}${newBest ? " • new clean-run best" : ""}`
   );
   window.dispatchEvent(new CustomEvent("run-grade", {
     detail: {
@@ -153,6 +177,9 @@ window.addEventListener("course-finish", () => {
       falls: state.falls,
       springLaunches: state.springLaunches,
       checkpoint: state.checkpoint,
+      collectibles: state.collectibles,
+      collectibleTotal: state.collectibleTotal,
+      fullClear,
       newBest
     }
   }));
