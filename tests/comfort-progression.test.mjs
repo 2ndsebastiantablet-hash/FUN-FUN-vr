@@ -74,8 +74,8 @@ function customEventClass() {
     setTimeout() { return 1; }
   });
 
-  vm.runInContext(fs.readFileSync("comfort-fixes.js", "utf8"), context, {
-    filename: "comfort-fixes.js"
+  vm.runInContext(fs.readFileSync("comfort-fixes-v2.js", "utf8"), context, {
+    filename: "comfort-fixes-v2.js"
   });
 
   assert.ok(AFRAME.components["comfort-grounding"], "comfort-grounding component should register");
