@@ -1,6 +1,6 @@
 # FUN-FUN VR
 
-A static WebXR platforming game for Meta Quest Browser using A-Frame, plain JavaScript, Gorilla Tag-style hand locomotion, WebRTC peer-to-peer multiplayer, KayKit platforming assets, seeded course generation, checkpoints, run grading, and optional collectibles.
+A static WebXR platforming game for Meta Quest Browser using A-Frame, plain JavaScript, Gorilla Tag-style hand locomotion, WebRTC peer-to-peer multiplayer, KayKit platforming assets, seeded course generation, checkpoints, run grading, optional collectibles, and an expanding mechanics laboratory.
 
 ## Movement source
 
@@ -10,11 +10,9 @@ The movement system remains based on the exact pinned template requested for thi
 - Commit: `28a426aa6ade789320e2202cfa8d2fe61b46b539`
 - Folder: `templates/gorilla-tag-locomotion`
 
-The game loads the original `gorilla-locomotion.js` from that immutable commit. The platforming runtimes add platform-top support, checkpoints, springs, finish triggers, safety behavior, grounded anti-slide braking, and comfort height tuning without replacing the template's hand pushing, launch averaging, bounce, gravity, air drag, or controller tracking.
+The game loads the original `gorilla-locomotion.js` from that immutable commit. The platforming runtimes add platform-top support, checkpoints, springs, finish triggers, safety behavior, grounded anti-slide braking, comfort height tuning, and supported moving-platform carry without replacing the template's hand pushing, launch averaging, bounce, gravity, air drag, or controller tracking.
 
 ## Current player comfort values
-
-The player is now positioned slightly higher than the first lowered build while remaining much closer to the platforms than the original elevated setup:
 
 - rig Y above platform base: `0.12 m`
 - player height offset: `0.88 m`
@@ -23,7 +21,7 @@ The player is now positioned slightly higher than the first lowered build while 
 - idle stop threshold: `0.42 m/s`
 - grounded braking strength: `9.5`
 
-The same height is applied to initial spawns, checkpoints, restarts, fall recovery, generated maps, and VR re-entry.
+The same height is applied to initial spawns, checkpoints, restarts, fall recovery, generated maps, mechanics-lab spawns, and VR re-entry.
 
 ## Course modes
 
@@ -41,7 +39,27 @@ The generated entry assembles a validated route from a reproducible seed:
 
 `https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/generated.html?mode=generated&seed=FUNFUN01`
 
-Use the course controls to select **Generated**, enter a seed, create a random seed, load the route, or copy its exact link. The same normalized seed produces the same module list, platform positions, checkpoints, spring sequence, finish gate, safety bounds, shard locations, and map checksum under generator version `module-generator-v1`.
+The same normalized seed produces the same module list, platform positions, checkpoints, spring sequence, finish gate, safety bounds, shard locations, and map checksum under generator version `module-generator-v1`.
+
+### Moving-platform mechanics lab
+
+Dynamic platform behavior is tested separately before it is allowed into generated maps:
+
+`https://2ndsebastiantablet-hash.github.io/FUN-FUN-vr/mechanics-lab.html`
+
+The first lab contains:
+
+- a forward/back shuttle,
+- a vertical lift,
+- a side-to-side shuttle,
+- two checkpoints,
+- a finish gate,
+- ten visible KayKit pieces,
+- eighteen moving or static locomotion colliders.
+
+Yellow rings identify moving platforms. Their motion is deterministic, eases to zero speed at endpoints, and carries a supported player without converting platform displacement into a fake controller push. Deliberate jumps and locomotion velocity remain controlled by the pinned Gorilla movement component.
+
+Moving platforms are not yet part of procedural generation or multiplayer courses. Physical Quest validation comes first. See `PHASE_3A_MOVING_PLATFORM_LAB.md`.
 
 ## Procedural module foundation
 
@@ -102,11 +120,13 @@ Private PeerJS/WebRTC rooms support up to four players. Head and hand poses are 
 
 For generated multiplayer, every device must open the exact same generated course link before creating or joining the room. The map and shard placement are deterministic, but course state remains local. Checkpoints, collected shards, spring events, timers, finish state, and best times are not yet network-authoritative.
 
+The moving-platform lab is currently solo. A later multiplayer phase must provide a shared obstacle timestamp before moving platforms can appear synchronized across headsets.
+
 The existing multiplayer hardening remains in place, including timeouts, heartbeat packets, stale-peer cleanup, pose validation, protocol checks, host-only room control, duplicate-connection cleanup, recoverable signaling behavior, and the solo WebRTC diagnostic.
 
 ## Safety and recovery
 
-Both course modes retain:
+The playable course entries retain:
 
 - normal A-Frame **Enter VR**
 - Quest controller tracking
@@ -118,12 +138,14 @@ Both course modes retain:
 - motion clearing after resets and VR exits
 - model-load fallbacks
 - HTTPS and immersive-VR checks
-- isolated multiplayer errors
 
 ## Important project files
 
 - `index.html` — calibration entry and course-selection controls
 - `generated.html` — generated-course entry
+- `mechanics-lab.html` — moving-platform Quest test entry
+- `mechanics-lab.js` — lab manifest, rendering, safety, checkpoints, timing, and finish flow
+- `moving-platform.js` — deterministic platform motion, supported-player carry, and controller-history compensation
 - `comfort-fixes.js` — camera height, body alignment, spring detection, and grounded stopping
 - `collectibles.js` — deterministic shard placement, collection triggers, reset behavior, and world status
 - `run-progression.js` — falls, checkpoints, shard progress, grades, full clears, and local clean-run records
@@ -138,7 +160,8 @@ Both course modes retain:
 - `tests/generated-bootstrap.test.mjs` — verifies generated browser bootstrapping
 - `tests/comfort-progression.test.mjs` — validates comfort values, anti-slide behavior, and run grading
 - `tests/collectibles.test.mjs` — validates shard placement across generated seeds
-- `.github/workflows/validate.yml` — automatic syntax, generator, gameplay, and HTML checks
+- `tests/moving-platform.test.mjs` — validates motion timing, support detection, carry, and lab structure
+- `.github/workflows/validate.yml` — automatic syntax, generator, gameplay, mechanics, and HTML checks
 
 ## Hosting
 
