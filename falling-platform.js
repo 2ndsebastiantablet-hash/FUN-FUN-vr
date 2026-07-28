@@ -1,11 +1,32 @@
 // Reusable falling-platform mechanic for the Phase 3 mechanics laboratory.
-// A supported player arms the platform, receives a visible warning, then the
-// collider is removed and the model drops away. The platform restores itself
-// after a deterministic delay for repeated Quest playtesting.
+// Quest playtesting showed the original warning and drop windows were too slow.
+// The visible warning remains readable, but effective timings are now sharply
+// reduced so players must react immediately.
+
+export const FALLING_PLATFORM_TUNING = Object.freeze({
+  warningScale: 0.48,
+  fallScale: 0.55,
+  minimumWarning: 120,
+  minimumFall: 220
+});
 
 function finiteNumber(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+export function scaledFallingTimings({ warningDelay = 700, fallDuration = 900, resetDelay = 2200 } = {}) {
+  return {
+    warningDelay: Math.max(
+      FALLING_PLATFORM_TUNING.minimumWarning,
+      finiteNumber(warningDelay, 700) * FALLING_PLATFORM_TUNING.warningScale
+    ),
+    fallDuration: Math.max(
+      FALLING_PLATFORM_TUNING.minimumFall,
+      finiteNumber(fallDuration, 900) * FALLING_PLATFORM_TUNING.fallScale
+    ),
+    resetDelay: Math.max(200, finiteNumber(resetDelay, 2200))
+  };
 }
 
 export function fallingPlatformPhase(elapsedMs, warningDelay = 700, fallDuration = 900, resetDelay = 2200) {
@@ -22,6 +43,7 @@ export function fallingPlatformPhase(elapsedMs, warningDelay = 700, fallDuration
 export function sampleFallOffset(elapsedFallMs, fallDistance = 10, fallDuration = 900) {
   const duration = Math.max(150, finiteNumber(fallDuration, 900));
   const progress = Math.min(1, Math.max(0, finiteNumber(elapsedFallMs, 0) / duration));
+  // Cubic acceleration makes the platform leave the player much more decisively.
   const eased = progress * progress * progress;
   return Math.max(0, finiteNumber(fallDistance, 10)) * eased;
 }
@@ -73,10 +95,15 @@ function registerBrowserComponent() {
       this.colliders = [];
       this.colliderSnapshots = [];
       this.warningVisuals = Array.from(this.el.querySelectorAll("[data-falling-warning]"));
+      this.timings = scaledFallingTimings(this.data);
       this.onCourseReset = this.onCourseReset.bind(this);
       window.addEventListener("course-request-reset", this.onCourseReset);
       this.captureColliders();
       this.el.setAttribute("data-falling-platform", "true");
+    },
+
+    update: function () {
+      this.timings = scaledFallingTimings(this.data);
     },
 
     remove: function () {
@@ -91,7 +118,11 @@ function registerBrowserComponent() {
         return {
           element: collider,
           type: component?.data?.type || "box",
-          size: { x: finiteNumber(size.x, 1), y: finiteNumber(size.y, 1), z: finiteNumber(size.z, 1) }
+          size: {
+            x: finiteNumber(size.x, 1),
+            y: finiteNumber(size.y, 1),
+            z: finiteNumber(size.z, 1)
+          }
         };
       });
     },
@@ -126,7 +157,7 @@ function registerBrowserComponent() {
       for (const visual of this.warningVisuals) {
         visual.setAttribute("visible", visible);
         if (visible && visual.object3D?.scale) {
-          const pulse = 1 + Math.sin(time * 0.02) * 0.12;
+          const pulse = 1 + Math.sin(time * 0.035) * 0.16;
           visual.object3D.scale.set(pulse, pulse, pulse);
         }
       }
@@ -138,7 +169,10 @@ function registerBrowserComponent() {
       this.setWarningVisible(true, time);
       this.el.setAttribute("data-falling-state", "warning");
       window.dispatchEvent(new CustomEvent("falling-platform-armed", {
-        detail: { platformId: this.el.id || "falling-platform", warningDelay: this.data.warningDelay }
+        detail: {
+          platformId: this.el.id || "falling-platform",
+          warningDelay: this.timings.warningDelay
+        }
       }));
     },
 
@@ -164,7 +198,11 @@ function registerBrowserComponent() {
       this.disableColliders();
       this.el.setAttribute("data-falling-state", "falling");
       window.dispatchEvent(new CustomEvent("falling-platform-dropped", {
-        detail: { platformId: this.el.id || "falling-platform", fallDistance: this.data.fallDistance }
+        detail: {
+          platformId: this.el.id || "falling-platform",
+          fallDistance: this.data.fallDistance,
+          fallDuration: this.timings.fallDuration
+        }
       }));
     },
 
@@ -173,6 +211,7 @@ function registerBrowserComponent() {
       this.armedAt = 0;
       this.fallStartedAt = 0;
       this.resetAt = 0;
+      this.timings = scaledFallingTimings(this.data);
       this.el.object3D.position.copy(this.basePosition);
       this.el.object3D.visible = true;
       this.el.object3D.updateMatrixWorld(true);
@@ -200,18 +239,18 @@ function registerBrowserComponent() {
 
       if (this.state === "warning") {
         this.setWarningVisible(true, time);
-        if (time - this.armedAt >= Math.max(100, this.data.warningDelay)) this.beginFall(time);
+        if (time - this.armedAt >= this.timings.warningDelay) this.beginFall(time);
         return;
       }
 
       if (this.state === "falling") {
         const elapsed = time - this.fallStartedAt;
-        const offset = sampleFallOffset(elapsed, this.data.fallDistance, this.data.fallDuration);
+        const offset = sampleFallOffset(elapsed, this.data.fallDistance, this.timings.fallDuration);
         this.el.object3D.position.y = this.basePosition.y - offset;
         this.el.object3D.updateMatrixWorld(true);
-        if (elapsed >= Math.max(150, this.data.fallDuration)) {
+        if (elapsed >= this.timings.fallDuration) {
           this.state = "hidden";
-          this.resetAt = time + Math.max(200, this.data.resetDelay);
+          this.resetAt = time + this.timings.resetDelay;
           this.el.object3D.visible = false;
           this.setWarningVisible(false);
           this.el.setAttribute("data-falling-state", "hidden");
