@@ -97,6 +97,8 @@ jobs:
           node --check advanced-course-extension.js
           node --check creative-puzzle-plan.js
           node --check creative-puzzle-systems.js
+          node --check creative-control-tuning.js
+          node --check creative-route-tuning.js
           node --check creative-puzzle-lab.js
           node --check structure-slope-base.js
           node --check structure-lab.js
