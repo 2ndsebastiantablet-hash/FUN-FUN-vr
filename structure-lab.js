@@ -1,9 +1,9 @@
 import { getPlatformerAsset } from "./assets/platformer/registry.js";
 import { registerGeneratedComponents, refreshLocomotionColliders } from "./generated-components.js";
-import { steppedSlopeDefinitions } from "./push-structure-mechanics.js";
-import "./push-structure-mechanics.js";
+import "./real-physics-objects.js";
+import "./paired-model-collider.js";
 
-const LAB_VERSION = "push-structure-lab-v1";
+const LAB_VERSION = "real-physics-collision-twins-v2";
 const INITIAL_SPAWN = Object.freeze({ x: 0, y: 0.12, z: 8 });
 const PLATFORM_COLLIDERS = Object.freeze([
   Object.freeze({ position: [0, 0.5, -0.97], size: [3.92, 1, 1.94] }),
@@ -17,18 +17,18 @@ const LAB_MANIFEST = Object.freeze({
     { id: "ball-platform", assetId: "platform-square-blue", position: [0, 0, 3.8], colliders: PLATFORM_COLLIDERS },
     {
       id: "structure-checkpoint-one", assetId: "platform-square-blue", position: [0, 0, -0.4], colliders: PLATFORM_COLLIDERS,
-      checkpoint: { id: "structure-checkpoint-1", label: "Ball test checkpoint", index: 1, spawn: [0, 0.12, -0.4] }
+      checkpoint: { id: "structure-checkpoint-1", label: "Ball physics checkpoint", index: 1, spawn: [0, 0.12, -0.4] }
     },
     { id: "crate-platform", assetId: "platform-square-blue", position: [0, 0, -4.6], colliders: PLATFORM_COLLIDERS },
     {
       id: "structure-checkpoint-two", assetId: "platform-square-blue", position: [0, 0, -8.8], colliders: PLATFORM_COLLIDERS,
-      checkpoint: { id: "structure-checkpoint-2", label: "Crate test checkpoint", index: 2, spawn: [0, 0.12, -8.8] }
+      checkpoint: { id: "structure-checkpoint-2", label: "Crate physics checkpoint", index: 2, spawn: [0, 0.12, -8.8] }
     },
     { id: "tunnel-entrance", assetId: "platform-square-blue", position: [0, 0, -13], colliders: PLATFORM_COLLIDERS },
     { id: "tunnel-exit", assetId: "platform-square-blue", position: [0, 0, -17.2], colliders: PLATFORM_COLLIDERS },
     {
       id: "structure-checkpoint-three", assetId: "platform-square-blue", position: [0, 0, -21.4], colliders: PLATFORM_COLLIDERS,
-      checkpoint: { id: "structure-checkpoint-3", label: "Beam checkpoint", index: 3, spawn: [0, 0.12, -21.4] }
+      checkpoint: { id: "structure-checkpoint-3", label: "Collision-twin checkpoint", index: 3, spawn: [0, 0.12, -21.4] }
     },
     { id: "slope-top", assetId: "platform-square-blue", position: [0, 1.2, -25.6], colliders: PLATFORM_COLLIDERS },
     { id: "structure-finish-platform", assetId: "platform-square-blue", position: [0, 1.2, -29.8], colliders: PLATFORM_COLLIDERS },
@@ -37,11 +37,13 @@ const LAB_MANIFEST = Object.freeze({
       finish: { radiusX: 1.85, radiusZ: 0.75, minRigY: 0.6, maxRigY: 5.8 }
     }
   ]),
-  expectedColliderCount: 40,
+  expectedBaseColliders: 35,
+  expectedPairedModels: 5,
+  expectedPairedProxies: 21,
+  expectedFinalColliders: 56,
   checkpointCount: 3,
-  pushableCount: 2,
-  goalCount: 2,
-  structureGroups: 6
+  dynamicBodyCount: 2,
+  goalCount: 2
 });
 
 function positionString(values) {
@@ -52,13 +54,20 @@ function createEntity(tag = "a-entity") {
   return document.createElement(tag);
 }
 
-function createCollider(parent, position, size, id) {
-  const collider = createEntity();
-  collider.setAttribute("data-structure-collider", id);
-  collider.setAttribute("position", positionString(position));
-  collider.setAttribute("locomotion-collider", `type: box; size: ${positionString(size)}`);
-  parent.appendChild(collider);
-  return collider;
+function createSolidBox(parent, position, size, id, options = {}) {
+  const box = createEntity("a-box");
+  box.setAttribute("data-structure-collider", id);
+  box.setAttribute("position", positionString(position));
+  box.setAttribute("width", String(size[0]));
+  box.setAttribute("height", String(size[1]));
+  box.setAttribute("depth", String(size[2]));
+  box.setAttribute("material", options.visible
+    ? `color: ${options.color || "#64748B"}; opacity: ${options.opacity ?? 1}; transparent: ${Number(options.opacity ?? 1) < 1}`
+    : "color: #FFFFFF; opacity: 0.001; transparent: true; depthWrite: false");
+  box.setAttribute("locomotion-collider", `type: box; size: ${positionString(size)}`);
+  box.setAttribute("static-body", "shape: box");
+  parent.appendChild(box);
+  return box;
 }
 
 function createModel(parent, piece, asset) {
@@ -88,6 +97,33 @@ function createModel(parent, piece, asset) {
   parent.appendChild(model);
 }
 
+function createModelPair(root, { id, assetId, position, scale = 1, profile, rotation = [0, 0, 0] }) {
+  const asset = getPlatformerAsset(assetId);
+  if (!asset) return null;
+  const parent = createEntity();
+  parent.id = id;
+  parent.setAttribute("data-model-pair", profile);
+  parent.setAttribute("position", positionString(position));
+  parent.setAttribute("rotation", positionString(rotation));
+  root.appendChild(parent);
+
+  const visible = createEntity();
+  visible.id = `${id}-visible`;
+  visible.setAttribute("data-visible-model", assetId);
+  visible.setAttribute("gltf-model", asset.url);
+  visible.setAttribute("scale", `${scale} ${scale} ${scale}`);
+  parent.appendChild(visible);
+
+  const twin = createEntity();
+  twin.id = `${id}-collision-twin`;
+  twin.setAttribute("data-collision-twin", assetId);
+  twin.setAttribute("gltf-model", asset.url);
+  twin.setAttribute("scale", `${scale} ${scale} ${scale}`);
+  twin.setAttribute("paired-model-collider", `profile: ${profile}; idPrefix: ${id}-solid; minimumDepth: ${Math.max(0.18, asset.bounds.size[2] * scale)}`);
+  parent.appendChild(twin);
+  return parent;
+}
+
 function addCheckpoint(pieceEntity, checkpoint) {
   const ring = createEntity("a-ring");
   ring.setAttribute("position", "0 1.025 0");
@@ -96,6 +132,7 @@ function addCheckpoint(pieceEntity, checkpoint) {
   ring.setAttribute("radius-outer", "0.92");
   ring.setAttribute("color", "#22C55E");
   ring.setAttribute("material", "emissive: #16A34A; emissiveIntensity: 0.45");
+  ring.setAttribute("animation", "property: rotation; to: -90 360 0; loop: true; dur: 6500; easing: linear");
   pieceEntity.appendChild(ring);
 
   const trigger = createEntity();
@@ -117,222 +154,115 @@ function addFinishTrigger(pieceEntity, finish) {
   pieceEntity.appendChild(trigger);
 }
 
-function createArch(root, { id, position, width = 2.4, height = 2.5, color = "#8B5CF6" }) {
-  const arch = createEntity();
-  arch.id = id;
-  arch.setAttribute("position", positionString(position));
-  arch.setAttribute("data-structure-group", "arch");
-
-  const left = createEntity("a-box");
-  left.setAttribute("position", `${(-width * 0.5 - 0.18).toFixed(2)} ${(height * 0.5).toFixed(2)} 0`);
-  left.setAttribute("width", "0.36");
-  left.setAttribute("height", String(height));
-  left.setAttribute("depth", "0.48");
-  left.setAttribute("color", color);
-  arch.appendChild(left);
-  createCollider(arch, [-width * 0.5 - 0.18, height * 0.5, 0], [0.36, height, 0.48], `${id}-left`);
-
-  const right = createEntity("a-box");
-  right.setAttribute("position", `${(width * 0.5 + 0.18).toFixed(2)} ${(height * 0.5).toFixed(2)} 0`);
-  right.setAttribute("width", "0.36");
-  right.setAttribute("height", String(height));
-  right.setAttribute("depth", "0.48");
-  right.setAttribute("color", color);
-  arch.appendChild(right);
-  createCollider(arch, [width * 0.5 + 0.18, height * 0.5, 0], [0.36, height, 0.48], `${id}-right`);
-
-  const top = createEntity("a-box");
-  top.setAttribute("position", `0 ${(height + 0.18).toFixed(2)} 0`);
-  top.setAttribute("width", String(width + 0.72));
-  top.setAttribute("height", "0.36");
-  top.setAttribute("depth", "0.48");
-  top.setAttribute("color", color);
-  arch.appendChild(top);
-  createCollider(arch, [0, height + 0.18, 0], [width + 0.72, 0.36, 0.48], `${id}-top`);
-
-  const torus = createEntity("a-torus");
-  torus.setAttribute("position", `0 ${(height * 0.62).toFixed(2)} 0`);
-  torus.setAttribute("radius", String(width * 0.56));
-  torus.setAttribute("radius-tubular", "0.12");
-  torus.setAttribute("color", "#C4B5FD");
-  torus.setAttribute("material", "emissive: #7C3AED; emissiveIntensity: 0.45");
-  arch.appendChild(torus);
-  root.appendChild(arch);
-}
-
-function createPushGoal(root, { id, targetId, position, label }) {
-  const goal = createEntity();
+function createGoal(root, { id, target, position, label, size = [1.45, 1.7, 1.05] }) {
+  const goal = createEntity("a-box");
   goal.id = id;
   goal.setAttribute("position", positionString(position));
-  goal.setAttribute("push-object-goal", `target: #${targetId}; size: 1.5 1.7 1.15; label: ${label}`);
-  const ring = createEntity("a-ring");
-  ring.setAttribute("data-goal-indicator", "true");
-  ring.setAttribute("position", "0 -0.42 0");
-  ring.setAttribute("rotation", "-90 0 0");
-  ring.setAttribute("radius-inner", "0.55");
-  ring.setAttribute("radius-outer", "0.75");
-  ring.setAttribute("color", "#FDE047");
-  goal.appendChild(ring);
-  const labelEntity = createEntity("a-text");
-  labelEntity.setAttribute("value", label);
-  labelEntity.setAttribute("position", "0 0.72 0");
-  labelEntity.setAttribute("align", "center");
-  labelEntity.setAttribute("width", "3.8");
-  labelEntity.setAttribute("color", "#14532D");
-  goal.appendChild(labelEntity);
+  goal.setAttribute("width", String(size[0]));
+  goal.setAttribute("height", "0.08");
+  goal.setAttribute("depth", String(size[2]));
+  goal.setAttribute("color", "#FACC15");
+  goal.setAttribute("material", "emissive: #A16207; emissiveIntensity: 0.55; opacity: 0.9; transparent: true");
+  goal.setAttribute("push-object-goal", `target: #${target}; size: ${positionString(size)}; label: ${label}`);
   root.appendChild(goal);
+  return goal;
 }
 
-function createPushables(root) {
-  createArch(root, { id: "ball-hoop", position: [0, 1, 2.75], width: 1.55, height: 1.75, color: "#7C3AED" });
+function createRealPhysicsObjects(root) {
+  createModelPair(root, {
+    id: "ball-hoop-pair",
+    assetId: "hoop-blue",
+    position: [0, 1, 2.72],
+    scale: 0.72,
+    profile: "hoop"
+  });
 
   const ball = createEntity("a-sphere");
-  ball.id = "push-ball";
-  ball.setAttribute("position", "0 1.48 4.75");
+  ball.id = "physics-ball";
+  ball.setAttribute("data-real-physics-object", "ball");
+  ball.setAttribute("position", "0 1.48 4.9");
   ball.setAttribute("radius", "0.48");
   ball.setAttribute("color", "#F59E0B");
-  ball.setAttribute("material", "emissive: #B45309; emissiveIntensity: 0.35; roughness: 0.55");
-  ball.setAttribute(
-    "deterministic-pushable",
-    "leftHand: #left-hand; rightHand: #right-hand; interactionRadius: 0.82; strength: 0.92; maximumSpeed: 4.4; friction: 4.2; minimumX: -1.35; maximumX: 1.35; minimumZ: 2.55; maximumZ: 5.1; fixedY: 1.48; shape: ball"
-  );
+  ball.setAttribute("material", "emissive: #B45309; emissiveIntensity: 0.28; roughness: 0.52; metalness: 0.05");
+  ball.setAttribute("dynamic-body", "shape: sphere; sphereRadius: 0.48; mass: 2.4; linearDamping: 0.12; angularDamping: 0.1");
+  ball.setAttribute("real-physics-hand-pusher", "leftHand: #left-hand; rightHand: #right-hand; shape: sphere; sphereRadius: 0.48; impulseScale: 0.34; maximumHandSpeed: 8; maximumImpulse: 8.5; cooldownMs: 55");
+  ball.setAttribute("real-physics-reset", "minimumY: -4; minimumX: -2.1; maximumX: 2.1; minimumZ: 1.55; maximumZ: 6.1");
   root.appendChild(ball);
-  createPushGoal(root, { id: "ball-goal", targetId: "push-ball", position: [0, 1.45, 2.75], label: "BALL GOAL" });
+  createGoal(root, { id: "ball-goal", target: "physics-ball", position: [0, 1.05, 2.72], label: "BALL PHYSICS GOAL" });
 
-  const leftRail = createEntity("a-box");
-  leftRail.setAttribute("position", "-1.35 1.45 -4.6");
-  leftRail.setAttribute("width", "0.22");
-  leftRail.setAttribute("height", "0.9");
-  leftRail.setAttribute("depth", "3.25");
-  leftRail.setAttribute("color", "#64748B");
-  root.appendChild(leftRail);
-  createCollider(root, [-1.35, 1.45, -4.6], [0.22, 0.9, 3.25], "crate-rail-left");
-
-  const rightRail = createEntity("a-box");
-  rightRail.setAttribute("position", "1.35 1.45 -4.6");
-  rightRail.setAttribute("width", "0.22");
-  rightRail.setAttribute("height", "0.9");
-  rightRail.setAttribute("depth", "3.25");
-  rightRail.setAttribute("color", "#64748B");
-  root.appendChild(rightRail);
-  createCollider(root, [1.35, 1.45, -4.6], [0.22, 0.9, 3.25], "crate-rail-right");
+  createSolidBox(root, [-1.35, 1.45, -4.6], [0.22, 0.9, 3.3], "crate-rail-left", { visible: true, color: "#64748B" });
+  createSolidBox(root, [1.35, 1.45, -4.6], [0.22, 0.9, 3.3], "crate-rail-right", { visible: true, color: "#64748B" });
 
   const crate = createEntity("a-box");
-  crate.id = "push-crate";
+  crate.id = "physics-crate";
+  crate.setAttribute("data-real-physics-object", "crate");
   crate.setAttribute("position", "0 1.45 -3.55");
   crate.setAttribute("width", "0.9");
   crate.setAttribute("height", "0.9");
   crate.setAttribute("depth", "0.9");
   crate.setAttribute("color", "#B45309");
   crate.setAttribute("material", "roughness: 0.88; metalness: 0.03");
-  crate.setAttribute(
-    "deterministic-pushable",
-    "leftHand: #left-hand; rightHand: #right-hand; interactionRadius: 0.78; strength: 0.8; maximumSpeed: 3.6; friction: 5; minimumX: -0.88; maximumX: 0.88; minimumZ: -5.75; maximumZ: -3.25; fixedY: 1.45; shape: crate"
-  );
+  crate.setAttribute("dynamic-body", "shape: box; mass: 9; linearDamping: 0.28; angularDamping: 0.34");
+  crate.setAttribute("real-physics-hand-pusher", "leftHand: #left-hand; rightHand: #right-hand; shape: box; halfExtents: 0.45 0.45 0.45; impulseScale: 0.12; maximumHandSpeed: 8; maximumImpulse: 7; cooldownMs: 65");
+  crate.setAttribute("real-physics-reset", "minimumY: -4; minimumX: -1.1; maximumX: 1.1; minimumZ: -6.15; maximumZ: -2.95");
   root.appendChild(crate);
-  createPushGoal(root, { id: "crate-goal", targetId: "push-crate", position: [0, 1.45, -5.55], label: "CRATE GOAL" });
+  createGoal(root, { id: "crate-goal", target: "physics-crate", position: [0, 1.05, -5.55], label: "HEAVY CRATE GOAL" });
 }
 
-function createPipeTunnel(root) {
-  const tunnel = createEntity();
-  tunnel.id = "pipe-tunnel";
-  tunnel.setAttribute("position", "0 0 -15.1");
-  tunnel.setAttribute("data-structure-group", "pipe-tunnel");
-
-  const walkway = createEntity("a-box");
-  walkway.setAttribute("position", "0 1.08 0");
-  walkway.setAttribute("width", "2.4");
-  walkway.setAttribute("height", "0.18");
-  walkway.setAttribute("depth", "3.8");
-  walkway.setAttribute("color", "#0EA5E9");
-  tunnel.appendChild(walkway);
-  createCollider(tunnel, [0, 1.08, 0], [2.4, 0.18, 3.8], "tunnel-floor");
-
-  for (const side of [-1, 1]) {
-    const wall = createEntity("a-box");
-    wall.setAttribute("position", `${(side * 1.35).toFixed(2)} 2.15 0`);
-    wall.setAttribute("width", "0.3");
-    wall.setAttribute("height", "2.2");
-    wall.setAttribute("depth", "3.8");
-    wall.setAttribute("color", "#0284C7");
-    wall.setAttribute("material", "opacity: 0.48; transparent: true");
-    tunnel.appendChild(wall);
-    createCollider(tunnel, [side * 1.35, 2.15, 0], [0.3, 2.2, 3.8], `tunnel-wall-${side}`);
+function createRealPipeTunnel(root) {
+  for (let index = 0; index < 3; index += 1) {
+    createModelPair(root, {
+      id: `pipe-segment-${index + 1}`,
+      assetId: "pipe-straight-blue",
+      position: [0, 1, -13.95 - index * 1.45],
+      scale: 1.35,
+      profile: "pipe",
+      rotation: [90, 0, 0]
+    });
   }
-
-  const roof = createEntity("a-box");
-  roof.setAttribute("position", "0 3.3 0");
-  roof.setAttribute("width", "2.4");
-  roof.setAttribute("height", "0.22");
-  roof.setAttribute("depth", "3.8");
-  roof.setAttribute("color", "#0284C7");
-  roof.setAttribute("material", "opacity: 0.48; transparent: true");
-  tunnel.appendChild(roof);
-  createCollider(tunnel, [0, 3.3, 0], [2.4, 0.22, 3.8], "tunnel-roof");
-
-  for (let z = -1.65; z <= 1.65; z += 0.82) {
-    const ring = createEntity("a-torus");
-    ring.setAttribute("position", `0 2.18 ${z.toFixed(2)}`);
-    ring.setAttribute("radius", "1.28");
-    ring.setAttribute("radius-tubular", "0.08");
-    ring.setAttribute("color", "#7DD3FC");
-    ring.setAttribute("material", "emissive: #0369A1; emissiveIntensity: 0.35; opacity: 0.72; transparent: true");
-    tunnel.appendChild(ring);
-  }
-  root.appendChild(tunnel);
 }
 
-function createBeamAndPillars(root) {
-  createArch(root, { id: "exit-arch", position: [0, 1, -17.9], width: 2.15, height: 2.35, color: "#14B8A6" });
+function createArchBeamAndPillars(root) {
+  createModelPair(root, {
+    id: "exit-arch-pair",
+    assetId: "arch-blue",
+    position: [0, 1, -17.95],
+    scale: 0.78,
+    profile: "arch"
+  });
 
-  const beam = createEntity("a-box");
-  beam.id = "narrow-beam";
-  beam.setAttribute("position", "0 1.18 -19.3");
-  beam.setAttribute("width", "0.72");
-  beam.setAttribute("height", "0.36");
-  beam.setAttribute("depth", "4.05");
-  beam.setAttribute("color", "#FACC15");
-  beam.setAttribute("material", "emissive: #A16207; emissiveIntensity: 0.25");
-  root.appendChild(beam);
-  createCollider(root, [0, 1.18, -19.3], [0.72, 0.36, 4.05], "narrow-beam-collider");
+  createSolidBox(root, [0, 1.18, -19.35], [0.72, 0.36, 4.05], "narrow-beam-collider", {
+    visible: true,
+    color: "#FACC15"
+  });
 
   for (const x of [-1.42, 1.42]) {
-    const pillar = createEntity("a-box");
-    pillar.setAttribute("position", `${x.toFixed(2)} 2 -21.4`);
-    pillar.setAttribute("width", "0.5");
-    pillar.setAttribute("height", "2");
-    pillar.setAttribute("depth", "0.5");
-    pillar.setAttribute("color", "#475569");
-    root.appendChild(pillar);
-    createCollider(root, [x, 2, -21.4], [0.5, 2, 0.5], `pillar-${x}`);
+    createSolidBox(root, [x, 2, -21.4], [0.5, 2, 0.5], `pillar-${x}`, {
+      visible: true,
+      color: "#475569"
+    });
   }
 }
 
 function createSteppedSlope(root) {
-  const steps = steppedSlopeDefinitions({ steps: 5, startZ: -23.05, stepDepth: 0.72, risePerStep: 0.24 });
-  for (const step of steps) {
-    const box = createEntity("a-box");
-    box.setAttribute("position", `${step.position.x} ${step.position.y.toFixed(3)} ${step.position.z.toFixed(3)}`);
-    box.setAttribute("width", String(step.size.x));
-    box.setAttribute("height", String(step.size.y));
-    box.setAttribute("depth", String(step.size.z));
-    box.setAttribute("color", step.index % 2 ? "#38BDF8" : "#0EA5E9");
-    box.setAttribute("data-slope-step", String(step.index));
-    root.appendChild(box);
-    createCollider(
-      root,
-      [step.position.x, step.position.y, step.position.z],
-      [step.size.x, step.size.y, step.size.z],
-      `slope-step-${step.index}`
-    );
+  const baseHeight = 1;
+  const risePerStep = 0.24;
+  const stepDepth = 0.72;
+  for (let index = 0; index < 5; index += 1) {
+    const height = baseHeight + (index + 1) * risePerStep;
+    const z = -23.05 - index * stepDepth;
+    createSolidBox(root, [0, height * 0.5, z], [2.7, height, stepDepth], `slope-step-${index}`, {
+      visible: true,
+      color: index % 2 ? "#38BDF8" : "#0EA5E9"
+    }).setAttribute("data-slope-step", String(index));
   }
 }
 
 function addInstructionSigns(root) {
   const signs = [
-    { position: [-3.45, 2.7, 3.8], rotation: "0 90 0", text: "1. PUSH THE BALL THROUGH THE PURPLE HOOP" },
-    { position: [3.45, 2.7, -4.6], rotation: "0 -90 0", text: "2. PUSH THE CRATE DOWN THE RAILING LANE" },
-    { position: [-3.45, 2.7, -13], rotation: "0 90 0", text: "3. TEST PIPE, ARCH, BEAM, PILLARS, AND STEPS" }
+    { position: [-3.45, 2.7, 3.8], rotation: "0 90 0", text: "1. REAL 2.4 KG BALL — PUSH IT THROUGH THE KAYKIT HOOP" },
+    { position: [3.45, 2.7, -4.6], rotation: "0 -90 0", text: "2. REAL 9 KG CRATE — HEAVIER, SLOWER, AND HARDER TO TURN" },
+    { position: [-3.45, 2.7, -13], rotation: "0 90 0", text: "3. VISIBLE KAYKIT MODELS + INVISIBLE SOLID COLLISION TWINS" }
   ];
   for (const sign of signs) {
     const plane = createEntity("a-plane");
@@ -403,26 +333,26 @@ function buildLab() {
   const rig = document.getElementById("player-rig");
   if (!root || !rig) return;
   root.innerHTML = "";
-  let expectedModels = 0;
 
   for (const piece of LAB_MANIFEST.pieces) {
     const asset = getPlatformerAsset(piece.assetId);
     if (!asset) continue;
-    expectedModels += 1;
     const pieceEntity = createEntity();
     pieceEntity.id = piece.id;
     pieceEntity.setAttribute("data-course-piece", piece.id);
     pieceEntity.setAttribute("position", positionString(piece.position));
     root.appendChild(pieceEntity);
     createModel(pieceEntity, piece, asset);
-    for (const collider of piece.colliders || []) createCollider(pieceEntity, collider.position, collider.size, `${piece.id}-platform`);
+    for (const collider of piece.colliders || []) {
+      createSolidBox(pieceEntity, collider.position, collider.size, `${piece.id}-platform`);
+    }
     if (piece.checkpoint) addCheckpoint(pieceEntity, piece.checkpoint);
     if (piece.finish) addFinishTrigger(pieceEntity, piece.finish);
   }
 
-  createPushables(root);
-  createPipeTunnel(root);
-  createBeamAndPillars(root);
+  createRealPhysicsObjects(root);
+  createRealPipeTunnel(root);
+  createArchBeamAndPillars(root);
   createSteppedSlope(root);
   addInstructionSigns(root);
 
@@ -432,9 +362,9 @@ function buildLab() {
   window.dispatchEvent(new CustomEvent("course-built", {
     detail: {
       version: LAB_VERSION,
-      expectedModels,
-      colliderCount: root.querySelectorAll("[locomotion-collider]").length,
-      pushableCount: root.querySelectorAll("[deterministic-pushable]").length,
+      baseColliderCount: root.querySelectorAll("[locomotion-collider]").length,
+      pairedModelCount: root.querySelectorAll("[data-collision-twin]").length,
+      dynamicBodyCount: root.querySelectorAll("[data-real-physics-object]").length,
       goalCount: root.querySelectorAll("[push-object-goal]").length,
       spawn: { ...INITIAL_SPAWN }
     }
@@ -455,18 +385,16 @@ function setupLifecycle() {
   const restartButton = document.getElementById("restart-course");
   if (!scene || !rig || !note || !status || !details || !worldStatus || !restartButton) return;
 
-  const state = { checkpoint: 0, goals: new Set(), contacts: 0, completed: false, startedAt: 0 };
-
-  function setStatus(message, mode = "ready") {
+  const state = { checkpoint: 0, goals: new Set(), contacts: 0, pairedReady: 0, completed: false, startedAt: 0 };
+  const setStatus = (message, mode = "ready") => {
     status.textContent = message;
     status.dataset.state = mode;
-  }
-  function setWorld(message) {
-    worldStatus.setAttribute("value", message);
-  }
-  function updateDetails() {
-    details.textContent = `Checkpoint ${state.checkpoint}/3 • Push goals ${state.goals.size}/2 • Hand contacts ${state.contacts}`;
-  }
+  };
+  const setWorld = (message) => worldStatus.setAttribute("value", message);
+  const updateDetails = () => {
+    details.textContent = `Checkpoint ${state.checkpoint}/3 • Physics goals ${state.goals.size}/2 • Hand impulses ${state.contacts} • Collision twins ${state.pairedReady}/${LAB_MANIFEST.expectedPairedModels}`;
+  };
+
   function restartLab() {
     state.checkpoint = 0;
     state.goals.clear();
@@ -483,23 +411,40 @@ function setupLifecycle() {
     });
     rig.components["structure-lab-safety"]?.setSpawn(INITIAL_SPAWN);
     window.dispatchEvent(new CustomEvent("course-request-reset", { detail: { spawn: { ...INITIAL_SPAWN } } }));
-    rig.components["structure-lab-safety"]?.resetPlayer("Push and structure lab restarted");
-    setStatus("Lab restarted. Pushables and goal zones were restored.", "ready");
-    setWorld("Push and structure lab ready");
+    rig.components["structure-lab-safety"]?.resetPlayer("Real physics and collision-twin lab restarted");
+    setStatus("Lab restarted. Rigid bodies, goals, and checkpoints were restored.", "ready");
+    setWorld("Real physics lab ready");
     updateDetails();
   }
 
+  async function waitForCollisionTwins(timeoutMs = 10000) {
+    const started = performance.now();
+    while (performance.now() - started < timeoutMs) {
+      const ready = document.querySelectorAll("[data-collision-twin-proxy]").length;
+      if (ready >= LAB_MANIFEST.expectedPairedProxies) return ready;
+      await new Promise((resolve) => window.setTimeout(resolve, 100));
+    }
+    return document.querySelectorAll("[data-collision-twin-proxy]").length;
+  }
+
   async function preflight() {
+    const pairedProxyCount = await waitForCollisionTwins();
+    refreshLocomotionColliders();
     const problems = [];
     const colliders = document.querySelectorAll("[locomotion-collider]");
-    const pushables = document.querySelectorAll("[deterministic-pushable]");
+    const dynamicBodies = document.querySelectorAll("[data-real-physics-object][dynamic-body]");
     const goals = document.querySelectorAll("[push-object-goal]");
+    const modelPairs = document.querySelectorAll("[data-model-pair]");
+    const twins = document.querySelectorAll("[data-collision-twin]");
     if (window.__LOCOMOTION_LOAD_FAILED__ || !AFRAME.components["gorilla-locomotion"]) problems.push("Gorilla locomotion did not load");
-    if (!AFRAME.components["deterministic-pushable"]) problems.push("pushable component is missing");
-    if (!AFRAME.components["push-object-goal"]) problems.push("push goal component is missing");
-    if (colliders.length !== LAB_MANIFEST.expectedColliderCount) problems.push(`expected ${LAB_MANIFEST.expectedColliderCount} colliders, found ${colliders.length}`);
-    if (pushables.length !== LAB_MANIFEST.pushableCount) problems.push(`expected ${LAB_MANIFEST.pushableCount} pushables, found ${pushables.length}`);
+    if (!AFRAME.components["dynamic-body"] || !scene.systems?.physics) problems.push("Cannon rigid-body physics did not load");
+    if (!AFRAME.components["real-physics-hand-pusher"]) problems.push("real hand impulse component is missing");
+    if (!AFRAME.components["paired-model-collider"]) problems.push("collision-twin component is missing");
+    if (dynamicBodies.length !== LAB_MANIFEST.dynamicBodyCount) problems.push(`expected ${LAB_MANIFEST.dynamicBodyCount} dynamic bodies, found ${dynamicBodies.length}`);
     if (goals.length !== LAB_MANIFEST.goalCount) problems.push(`expected ${LAB_MANIFEST.goalCount} goals, found ${goals.length}`);
+    if (modelPairs.length !== LAB_MANIFEST.expectedPairedModels || twins.length !== LAB_MANIFEST.expectedPairedModels) problems.push("visible/invisible model pairs are incomplete");
+    if (pairedProxyCount !== LAB_MANIFEST.expectedPairedProxies) problems.push(`expected ${LAB_MANIFEST.expectedPairedProxies} solid twin proxies, found ${pairedProxyCount}`);
+    if (colliders.length !== LAB_MANIFEST.expectedFinalColliders) problems.push(`expected ${LAB_MANIFEST.expectedFinalColliders} final colliders, found ${colliders.length}`);
 
     if (problems.length) {
       note.textContent = `Lab preflight failed: ${problems.join("; ")}`;
@@ -509,11 +454,11 @@ function setupLifecycle() {
       return;
     }
 
-    refreshLocomotionColliders();
-    note.textContent = "Push and structure lab passed preflight. Enter VR and test both objects plus every structural collision section.";
+    state.pairedReady = LAB_MANIFEST.expectedPairedModels;
+    note.textContent = "Real physics and collision-twin lab passed preflight. Enter VR and compare the light ball, heavy crate, and smooth KayKit structures.";
     note.dataset.state = "ready";
-    setStatus("Lab ready: two push tests and six structure groups.", "ready");
-    setWorld("Enter VR to test pushables and structures");
+    setStatus("Lab ready: real weighted physics and five visible/invisible model pairs.", "ready");
+    setWorld("Enter VR to test real physics and collision twins");
     updateDetails();
 
     if (window.isSecureContext && navigator.xr?.isSessionSupported) {
@@ -529,6 +474,10 @@ function setupLifecycle() {
     }
   }
 
+  window.addEventListener("paired-collider-ready", () => {
+    state.pairedReady = Math.min(LAB_MANIFEST.expectedPairedModels, state.pairedReady + 1);
+    updateDetails();
+  });
   window.addEventListener("course-checkpoint", (event) => {
     const index = Number(event.detail?.index || 0);
     if (index <= state.checkpoint) return;
@@ -540,12 +489,14 @@ function setupLifecycle() {
   });
   window.addEventListener("push-goal-complete", (event) => {
     state.goals.add(event.detail?.goalId || "goal");
-    setStatus(`${event.detail?.label || "Push goal"} completed.`, "ready");
-    setWorld(`Push goals ${state.goals.size}/2 complete`);
+    setStatus(`${event.detail?.label || "Physics goal"} completed.`, "ready");
+    setWorld(`Physics goals ${state.goals.size}/2 complete`);
     updateDetails();
   });
-  window.addEventListener("pushable-contact", () => {
+  window.addEventListener("pushable-contact", (event) => {
     state.contacts += 1;
+    const mass = Number(event.detail?.mass || 0).toFixed(1);
+    setStatus(`${event.detail?.hand || "Hand"} impulse applied to ${event.detail?.objectId || "object"} (${mass} kg).`, "ready");
     updateDetails();
   });
   window.addEventListener("playtest-reset", (event) => {
@@ -555,11 +506,9 @@ function setupLifecycle() {
     if (state.completed) return;
     state.completed = true;
     const elapsed = state.startedAt ? (performance.now() - state.startedAt) / 1000 : 0;
-    const goalText = state.goals.size === 2 ? "FULL PUSH CLEAR" : `${state.goals.size}/2 PUSH GOALS`;
-    setStatus(`Structure lab clear in ${elapsed.toFixed(1)} seconds • ${goalText}`, "ready");
-    setWorld("PUSH & STRUCTURE LAB CLEAR");
+    setStatus(`Real physics and collision-twin lab clear in ${elapsed.toFixed(1)} seconds.`, "ready");
+    setWorld("PHYSICS + COLLISION TWINS CLEAR");
   });
-
   scene.addEventListener("enter-vr", () => {
     document.body.classList.add("vr-active");
     if (!state.startedAt) state.startedAt = performance.now();
@@ -567,8 +516,8 @@ function setupLifecycle() {
   scene.addEventListener("exit-vr", () => document.body.classList.remove("vr-active"));
   restartButton.addEventListener("click", restartLab);
 
-  if (scene.hasLoaded) window.setTimeout(preflight, 140);
-  else scene.addEventListener("loaded", () => window.setTimeout(preflight, 140), { once: true });
+  if (scene.hasLoaded) window.setTimeout(preflight, 150);
+  else scene.addEventListener("loaded", () => window.setTimeout(preflight, 150), { once: true });
 }
 
 registerGeneratedComponents();

@@ -80,6 +80,51 @@ export const PLATFORMER_ASSETS = [
     },
     phase: "phase-1-pilot",
     status: "gallery-ready-pending-headset"
+  },
+  {
+    id: "arch-blue",
+    label: "KayKit Arch Blue",
+    source: "Assets/gltf/blue/arch_blue.gltf",
+    url: `${MIRROR_BASE}/blue/arch_blue.gltf`,
+    category: "structure",
+    role: "arch",
+    color: "blue",
+    bounds: { min: [-1.875, 0, -0.375], max: [1.875, 3.7, 0.375], size: [3.75, 3.7, 0.75] },
+    collisionProfile: "paired-arch",
+    tags: ["arch", "opening", "collision-twin", "structural"],
+    galleryScale: 1,
+    phase: "phase-3-structure",
+    status: "quest-test-pending"
+  },
+  {
+    id: "hoop-blue",
+    label: "KayKit Hoop Blue",
+    source: "Assets/gltf/blue/hoop_blue.gltf",
+    url: `${MIRROR_BASE}/blue/hoop_blue.gltf`,
+    category: "structure",
+    role: "hoop",
+    color: "blue",
+    bounds: { min: [-1.7, 0, -0.375], max: [1.7, 4.7, 0.375], size: [3.4, 4.7, 0.75] },
+    collisionProfile: "paired-hoop",
+    tags: ["hoop", "opening", "collision-twin", "push-goal"],
+    galleryScale: 0.8,
+    phase: "phase-3-structure",
+    status: "quest-test-pending"
+  },
+  {
+    id: "pipe-straight-blue",
+    label: "KayKit Straight Pipe Blue",
+    source: "Assets/gltf/blue/pipe_straight_A_blue.gltf",
+    url: `${MIRROR_BASE}/blue/pipe_straight_A_blue.gltf`,
+    category: "structure",
+    role: "pipe-tunnel",
+    color: "blue",
+    bounds: { min: [-1, 0, -1], max: [1, 2, 1], size: [2, 2, 2] },
+    collisionProfile: "paired-pipe",
+    tags: ["pipe", "tunnel", "collision-twin", "structural"],
+    galleryScale: 1,
+    phase: "phase-3-structure",
+    status: "quest-test-pending"
   }
 ];
 
@@ -95,7 +140,7 @@ export function getPlatformerAsset(id) {
 }
 
 // The live course needs one visual-only ramp calibration. The gallery does not.
-if (document.getElementById("course-root")) {
+if (typeof document !== "undefined" && document.getElementById("course-root")) {
   import("../../course-calibration.js").catch(function (error) {
     window.dispatchEvent(new CustomEvent("course-asset-error", {
       detail: {
