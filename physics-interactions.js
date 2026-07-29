@@ -131,6 +131,7 @@ function registerPhysicsDoor() {
       this.closedY = this.el.object3D.position.y;
       this.targetY = this.closedY;
       this.isOpen = false;
+      this.worldPosition = new THREE.Vector3();
       this.onReset = () => this.setOpen(false, true);
       window.addEventListener("course-request-reset", this.onReset);
     },
@@ -146,9 +147,8 @@ function registerPhysicsDoor() {
       this.el.object3D.position.y = y;
       const body = this.el.body;
       if (body) {
-        const world = new THREE.Vector3();
-        this.el.object3D.getWorldPosition(world);
-        body.position.set(world.x, world.y, world.z);
+        this.el.object3D.getWorldPosition(this.worldPosition);
+        body.position.set(this.worldPosition.x, this.worldPosition.y, this.worldPosition.z);
         body.velocity.set(0, 0, 0);
         body.aabbNeedsUpdate = true;
       }
@@ -173,13 +173,23 @@ function registerWeightedPlate() {
     },
     init: function () {
       this.center = new THREE.Vector3();
+      this.bodyWorld = new THREE.Vector3();
       this.active = false;
       this.lastWeight = 0;
+      this.lastCheck = -Infinity;
       this.onReset = () => this.apply(false, 0);
       window.addEventListener("course-request-reset", this.onReset);
     },
     remove: function () {
       window.removeEventListener("course-request-reset", this.onReset);
+    },
+    syncBody: function () {
+      const body = this.el.body;
+      if (!body) return;
+      this.el.object3D.getWorldPosition(this.bodyWorld);
+      body.position.set(this.bodyWorld.x, this.bodyWorld.y, this.bodyWorld.z);
+      body.velocity.set(0, 0, 0);
+      body.aabbNeedsUpdate = true;
     },
     apply: function (active, weight) {
       if (this.active === active && Math.abs(this.lastWeight - weight) < 0.01) return;
@@ -187,6 +197,7 @@ function registerWeightedPlate() {
       this.active = active;
       this.lastWeight = weight;
       this.el.object3D.position.y = active ? 1.02 : 1.10;
+      this.syncBody();
       this.el.setAttribute("color", active ? "#22C55E" : "#A855F7");
       this.data.door?.components?.["physics-door"]?.setOpen(active);
       if (changed) {
@@ -202,7 +213,8 @@ function registerWeightedPlate() {
       }
     },
     tick: function (time) {
-      if (time % 50 > 18) return;
+      if (time - this.lastCheck < 50) return;
+      this.lastCheck = time;
       this.el.object3D.getWorldPosition(this.center);
       const bodies = Array.from(this.data.targets || []).map((entity) => entity?.body).filter(Boolean);
       const weight = weightInsidePlate(bodies, this.center, this.data.size, this.data.verticalTolerance);
