@@ -8,6 +8,7 @@ import {
 } from "../real-physics-objects.js";
 import { collisionTwinParts } from "../paired-model-collider.js";
 import { PHYSICS_LANE_BOUNDARIES } from "../physics-lane-boundaries.js";
+import { alignPipeSegments } from "../pipe-placement-v2.js";
 
 const ballImpulse = calculateWeightedImpulse({
   handVelocity: { x: 3, y: 0.4, z: -2 },
@@ -46,6 +47,18 @@ assert.equal(archParts.some((part) => part.name === "full"), false, "Arch openin
 assert.equal(pipeParts.some((part) => part.name === "full"), false, "Pipe tunnel must remain hollow");
 assert.equal(PHYSICS_LANE_BOUNDARIES.length, 5, "Real bodies need five physical lane boundaries");
 
+const pipeElements = new Map();
+for (let index = 1; index <= 3; index += 1) {
+  const state = { position: { x: 0, y: 1, z: -13.95 - (index - 1) * 1.45 }, written: "" };
+  pipeElements.set(`pipe-segment-${index}`, {
+    getAttribute() { return state.position; },
+    setAttribute(_name, value) { state.written = value; },
+    state
+  });
+}
+assert.equal(alignPipeSegments({ getElementById(id) { return pipeElements.get(id); } }), 3);
+for (const pipe of pipeElements.values()) assert.match(pipe.state.written, / 2\.350 /, "Pipe should sit on the platform top");
+
 const physics = fs.readFileSync("real-physics-objects.js", "utf8");
 const twins = fs.readFileSync("paired-model-collider.js", "utf8");
 const source = fs.readFileSync("structure-lab.js", "utf8");
@@ -56,6 +69,7 @@ assert.doesNotMatch(html, /push-structure-mechanics\.js/);
 assert.match(physics, /applyImpulse/);
 assert.match(physics, /angularVelocity/);
 assert.match(physics, /body\.mass/);
+assert.match(physics, /this\.current\[key\]\.x - body\.position\.x/);
 assert.match(twins, /data-collision-twin-proxy/);
 assert.match(twins, /static-body/);
 assert.match(twins, /locomotion-collider/);
@@ -71,6 +85,7 @@ assert.match(registry, /blue\/arch_blue\.gltf/);
 assert.match(registry, /blue\/pipe_straight_A_blue\.gltf/);
 assert.match(html, /aframe-physics-system@v4\.2\.4/);
 assert.match(html, /physics="gravity: -9\.8/);
+assert.match(html, /pipe-placement-v2\.js\?build=20260729-real-physics-v2/);
 assert.match(html, /structure-lab\.js\?build=20260729-real-physics-v2/);
 
-console.log("Real weighted bodies, hand impulses, physics goals, and visible/invisible collision-twin tests passed.");
+console.log("Real weighted bodies, relative hand impulses, aligned pipe models, physics goals, and visible/invisible collision-twin tests passed.");
