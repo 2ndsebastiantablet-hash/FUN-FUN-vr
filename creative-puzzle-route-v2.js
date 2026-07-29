@@ -17,6 +17,11 @@ function positionOf(element) {
   };
 }
 
+function numberAttribute(element, name) {
+  const value = Number(element?.getAttribute?.(name));
+  return Number.isFinite(value) ? value : 0;
+}
+
 function setPosition(element, x, y, z) {
   if (!element) return;
   element.setAttribute("position", `${x} ${y} ${z}`);
@@ -31,7 +36,27 @@ function setPosition(element, x, y, z) {
   element.object3D?.updateMatrixWorld?.(true);
 }
 
-function createRouteStep(root, { id, x, z, type, phase = 0, planSource }) {
+export function removeLegacyCargoRails(root) {
+  if (!root) return 0;
+  let removed = 0;
+  for (const element of Array.from(root.children || [])) {
+    if (String(element.tagName || "").toLowerCase() !== "a-box") continue;
+    const p = positionOf(element);
+    const depth = numberAttribute(element, "depth");
+    const width = numberAttribute(element, "width");
+    const oldCargoRail =
+      Math.abs(Math.abs(p.x) - 1.94) < 0.04 &&
+      Math.abs(p.z + 12.9) < 0.08 &&
+      Math.abs(depth - 21.5) < 0.1 &&
+      Math.abs(width - 0.16) < 0.04;
+    if (!oldCargoRail) continue;
+    element.remove();
+    removed += 1;
+  }
+  return removed;
+}
+
+function createRouteStep(root, { id, x, z, type, phase = 0 }) {
   const step = document.createElement("a-entity");
   step.id = id;
   step.setAttribute("position", `${x} 0 ${z}`);
@@ -173,6 +198,7 @@ export function applyCreativeRouteV2(documentLike = globalThis.document) {
   const root = documentLike?.getElementById?.("course-root");
   if (!root || root.dataset?.creativeRouteV2 === "true") return false;
   root.dataset.creativeRouteV2 = "true";
+  removeLegacyCargoRails(root);
   tuneMovingRoute(root);
   tuneSteppedRoute(root, "timed", -17.2);
   tuneSteppedRoute(root, "fragile", -21.4);
