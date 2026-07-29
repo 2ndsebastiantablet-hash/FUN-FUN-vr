@@ -82,6 +82,7 @@ jobs:
           node --check solid-physics-hands.js
           node --check physics-interactions.js
           node --check physics-interaction-boundaries.js
+          node --check physics-interaction-tuning.js
           node --check physics-interaction-lab.js
           node --check structure-slope-base.js
           node --check structure-lab.js
