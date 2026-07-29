@@ -1,6 +1,6 @@
 // Solid tracked-controller hands for local Cannon physics interaction.
 // The hand bodies are kinematic: controller tracking owns their pose, while Cannon
-// uses their velocity and collision shape to push, roll, tip, and catch dynamic bodies.
+// uses their velocity and collision shape to push, roll, tip, catch, and hold bodies.
 
 function finiteNumber(value, fallback = 0) {
   const number = Number(value);
@@ -25,6 +25,12 @@ export function trackedVelocity(current, previous, deltaSeconds, maximum = 12) {
     y: (finiteNumber(current?.y) - finiteNumber(previous?.y)) / dt,
     z: (finiteNumber(current?.z) - finiteNumber(previous?.z)) / dt
   }, maximum);
+}
+
+export function removeScriptedPushers(documentLike = globalThis.document) {
+  const objects = Array.from(documentLike?.querySelectorAll?.("[real-physics-hand-pusher]") || []);
+  for (const object of objects) object.removeAttribute?.("real-physics-hand-pusher");
+  return objects.length;
 }
 
 function registerSolidHandComponent() {
@@ -80,14 +86,17 @@ function registerSolidHandComponent() {
       const other = event?.body || event?.detail?.body;
       if (!other || finiteNumber(other.mass) <= 0) return;
       this.lastContact = now;
-      window.dispatchEvent(new CustomEvent("solid-hand-contact", {
-        detail: {
-          hand: this.data.hand,
-          handId: this.el.id,
-          objectId: other.el?.id || "physics-object",
-          mass: finiteNumber(other.mass)
-        }
-      }));
+      const detail = {
+        hand: this.data.hand,
+        handId: this.el.id,
+        objectId: other.el?.id || "physics-object",
+        mass: finiteNumber(other.mass),
+        source: "solid-kinematic-contact"
+      };
+      window.dispatchEvent(new CustomEvent("solid-hand-contact", { detail }));
+      // Compatibility with the existing lab counter while the old scripted pusher
+      // attribute is deliberately removed from every object.
+      window.dispatchEvent(new CustomEvent("pushable-contact", { detail }));
     },
 
     tock: function (time, deltaMs) {
@@ -119,4 +128,15 @@ function registerSolidHandComponent() {
   });
 }
 
+function retrofitWhenReady() {
+  removeScriptedPushers();
+}
+
 registerSolidHandComponent();
+
+if (typeof window !== "undefined") {
+  window.addEventListener("course-built", retrofitWhenReady);
+  document.addEventListener("DOMContentLoaded", retrofitWhenReady, { once: true });
+  window.setTimeout(retrofitWhenReady, 100);
+  window.setTimeout(retrofitWhenReady, 500);
+}
