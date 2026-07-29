@@ -38,6 +38,8 @@ jobs:
         run: node tests/hazard-retune-v2.test.mjs
       - name: Validate real rigid bodies and collision twins
         run: node tests/push-structure.test.mjs
+      - name: Validate solid hands and physics interactions
+        run: node tests/solid-hands-interactions.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
       - name: Validate Quest vector readiness
@@ -77,6 +79,11 @@ jobs:
           node --check paired-model-collider.js
           node --check physics-lane-boundaries.js
           node --check pipe-placement-v2.js
+          node --check solid-physics-hands.js
+          node --check physics-interactions.js
+          node --check physics-interaction-boundaries.js
+          node --check physics-interaction-tuning.js
+          node --check physics-interaction-lab.js
           node --check structure-slope-base.js
           node --check structure-lab.js
           node --check runtime-error-guard.js
@@ -95,7 +102,7 @@ jobs:
           from pathlib import Path
           class Parser(HTMLParser):
               pass
-          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html", "hazard-lab.html", "structure-lab.html"):
+          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html", "hazard-lab.html", "structure-lab.html", "physics-interaction-lab.html"):
               parser = Parser()
               parser.feed(Path(name).read_text(encoding="utf-8"))
               print(f"Parsed {name}")
