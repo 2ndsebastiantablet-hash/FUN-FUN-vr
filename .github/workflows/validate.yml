@@ -44,6 +44,8 @@ jobs:
         run: node tests/integrated-procedural.test.mjs
       - name: Validate advanced integrated course
         run: node tests/advanced-integrated.test.mjs
+      - name: Validate creative puzzle expedition
+        run: node tests/creative-puzzle.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
       - name: Validate Quest vector readiness
@@ -93,6 +95,9 @@ jobs:
           node --check advanced-integrated-modules.js
           node --check advanced-physics-surfaces.js
           node --check advanced-course-extension.js
+          node --check creative-puzzle-plan.js
+          node --check creative-puzzle-systems.js
+          node --check creative-puzzle-lab.js
           node --check structure-slope-base.js
           node --check structure-lab.js
           node --check runtime-error-guard.js
@@ -111,7 +116,7 @@ jobs:
           from pathlib import Path
           class Parser(HTMLParser):
               pass
-          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html", "hazard-lab.html", "structure-lab.html", "physics-interaction-lab.html", "integrated-lab.html", "advanced-integrated-lab.html"):
+          for name in ("index.html", "generated.html", "asset-gallery.html", "labs.html", "mechanics-lab.html", "rotating-lab.html", "falling-lab.html", "timed-lab.html", "interaction-lab.html", "hazard-lab.html", "structure-lab.html", "physics-interaction-lab.html", "integrated-lab.html", "advanced-integrated-lab.html", "creative-puzzle-lab.html"):
               parser = Parser()
               parser.feed(Path(name).read_text(encoding="utf-8"))
               print(f"Parsed {name}")
