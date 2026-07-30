@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0F172A" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>FUN-FUN VR Creative Puzzle Expedition V2</title>
+  <title>FUN-FUN VR Creative Puzzle Expedition V3</title>
 
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.4/dist/aframe-physics-system.min.js"></script>
@@ -14,11 +14,11 @@
     onerror="window.__LOCOMOTION_LOAD_FAILED__ = true;"
   ></script>
   <script type="module" src="./comfort-fixes.js"></script>
-  <script type="module" src="./creative-puzzle-input-v2.js?build=20260729-creative-puzzle-v2"></script>
-  <script type="module" src="./creative-puzzle-logic-v2.js?build=20260729-creative-puzzle-v2"></script>
-  <script type="module" src="./creative-puzzle-route-v2.js?build=20260729-creative-puzzle-v2"></script>
-  <script type="module" src="./creative-puzzle-visual-v2.js?build=20260729-creative-puzzle-v2"></script>
-  <script type="module" src="./creative-puzzle-lab.js?build=20260729-creative-puzzle-v2"></script>
+  <script type="module" src="./creative-puzzle-input-v2.js?build=20260729-solid-controls-v3"></script>
+  <script type="module" src="./creative-puzzle-logic-v2.js?build=20260729-solid-controls-v3"></script>
+  <script type="module" src="./creative-puzzle-route-v2.js?build=20260729-solid-controls-v3"></script>
+  <script type="module" src="./creative-puzzle-visual-v2.js?build=20260729-solid-controls-v3"></script>
+  <script type="module" src="./creative-puzzle-lab.js?build=20260729-solid-controls-v3"></script>
 
   <style>
     html, body { width: 100%; height: 100%; }
@@ -54,11 +54,11 @@
   </style>
 </head>
 <body>
-  <div id="note" data-state="checking">Building the rebuilt puzzle routes, physical controls, timer display, and color vault…</div>
+  <div id="note" data-state="checking">Building solid spring buttons, hinged levers, puzzle routes, timer display, and color vault…</div>
 
   <section id="lab-ui" aria-label="Creative puzzle expedition controls">
-    <h1>Creative Puzzle Expedition V2</h1>
-    <p>Side routes are now too far apart to skip, controls use direct hand interaction, and every puzzle provides persistent visual feedback.</p>
+    <h1>Creative Puzzle Expedition V3</h1>
+    <p>Buttons now contain spring-loaded solid bodies. Levers contain hinged solid rod-and-knob bodies that must be physically pulled.</p>
     <div id="course-status" role="status" data-state="checking">Generating Triple Lock, Cargo Vault, Timed Relay, and Color Code Vault…</div>
     <div id="course-details">Seed loading • checkpoint 0/4</div>
     <div class="lab-row">
@@ -68,17 +68,17 @@
       <button id="copy-seed-link" type="button" class="secondary">Copy Puzzle Link</button>
       <button id="restart-course" type="button" class="secondary">Restart Same Seed</button>
       <a class="secondary" href="./advanced-integrated-lab.html?seed=FUNADV01&amp;build=20260729-advanced-integrated-v1">Advanced Course</a>
-      <a class="secondary" href="./labs.html?build=20260729-creative-puzzle-v2">All Mechanics Labs</a>
+      <a class="secondary" href="./labs.html?build=20260729-solid-controls-v3">All Mechanics Labs</a>
       <a class="secondary" href="./">Return to Game</a>
     </div>
-    <div class="hint">Press buttons with either solid hand. Pull a lever by touching its handle and dragging your hand down or sideways. Active controls turn green.</div>
+    <div class="hint">Touch a button cap with either hand to press it. Touch the lever rod or knob, then physically drag it through the hinge arc. Trigger and Grip are not required.</div>
   </section>
 
   <noscript>This WebXR puzzle course requires JavaScript.</noscript>
 
   <a-scene
     renderer="antialias: true; colorManagement: true"
-    physics="gravity: -9.8; iterations: 14; friction: 0.5; restitution: 0.14; debug: false; maxInterval: 0.0333"
+    physics="gravity: -9.8; iterations: 16; friction: 0.52; restitution: 0.12; debug: false; maxInterval: 0.025"
     vr-mode-ui="enabled: true"
     webxr="referenceSpaceType: local-floor; optionalFeatures: local-floor, bounded-floor, hand-tracking"
     loading-screen="dotsColor: #38BDF8; backgroundColor: #0F172A"
@@ -99,7 +99,7 @@
     <a-entity id="course-root"></a-entity>
 
     <a-plane position="-4.25 3.2 8" rotation="0 90 0" width="8.6" height="2.85" color="#FFFFFF">
-      <a-text value="FUN-FUN VR — CREATIVE PUZZLE EXPEDITION V2" position="0 0.78 0.01" color="#0F172A" width="7.4" align="center"></a-text>
+      <a-text value="FUN-FUN VR — CREATIVE PUZZLE EXPEDITION V3" position="0 0.78 0.01" color="#0F172A" width="7.4" align="center"></a-text>
       <a-text id="world-status" value="Generating puzzle seed" position="0 0.08 0.01" color="#334155" width="6.8" align="center"></a-text>
       <a-text value="TRIPLE LOCK • CARGO VAULT • TIMED RELAY • COLOR CODE VAULT" position="0 -0.68 0.01" color="#475569" width="7.1" align="center"></a-text>
     </a-plane>
