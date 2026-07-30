@@ -46,6 +46,8 @@ jobs:
         run: node tests/advanced-integrated.test.mjs
       - name: Validate creative puzzle expedition
         run: node tests/creative-puzzle.test.mjs
+      - name: Validate creative puzzle V2 rebuild
+        run: node tests/creative-puzzle-v2.test.mjs
       - name: Validate Quest runtime error guard
         run: node tests/runtime-error-guard.test.mjs
       - name: Validate Quest vector readiness
@@ -99,6 +101,10 @@ jobs:
           node --check creative-puzzle-systems.js
           node --check creative-control-tuning.js
           node --check creative-route-tuning.js
+          node --check creative-puzzle-input-v2.js
+          node --check creative-puzzle-logic-v2.js
+          node --check creative-puzzle-route-v2.js
+          node --check creative-puzzle-visual-v2.js
           node --check creative-puzzle-lab.js
           node --check structure-slope-base.js
           node --check structure-lab.js
